@@ -21,7 +21,9 @@ Per dimostrare questo risultato, si introduce il modello dell'*albero di decisio
   - Ogni *nodo interno* rappresenta un confronto del tipo $a_i lt.eq a_j$, dove $i, j$ sono indici degli elementi.
   - Il *sottoalbero sinistro* di un nodo corrisponde all'esecuzione nel caso in cui il confronto dia esito positivo ($a_i lt.eq a_j$).
   - Il *sottoalbero destro* corrisponde al caso in cui il confronto dia esito negativo ($a_i > a_j$).
-  - Ogni *foglia* rappresenta una permutazione dell'output, cioè un possibile ordinamento finale degli elementi.
+  - Ogni *foglia* rappresenta una permutazione dell'output, cioè un possibile ordinamento finale degli elementi. Una foglia si dice *raggiungibile* se esiste un input per il quale l'algoritmo segue il cammino dalla radice a quella foglia.
+
+  Affinché un algoritmo di ordinamento per confronti sia corretto, ciascuna delle $n!$ permutazioni deve apparire come foglia raggiungibile dell'albero di decisione. Consideriamo soltanto alberi di decisione in cui ogni permutazione compare in una foglia raggiungibile.
 
   L'altezza dell'albero corrisponde al numero massimo di confronti effettuati dall'algoritmo nel caso pessimo.
 ]
@@ -46,6 +48,14 @@ Per dimostrare questo risultato, si introduce il modello dell'*albero di decisio
   $ h = Omega(n log n) $
 
   Qualsiasi algoritmo basato su confronti deve eseguire almeno $Omega(n log n)$ confronti nel caso pessimo.
+]
+
+#corollary(title: "Ottimalità asintotica di HeapSort e MergeSort")[
+  HeapSort e MergeSort sono algoritmi di ordinamento per confronti asintoticamente ottimali.
+]
+
+#demonstration[
+  I limiti superiori $O(n log n)$ sui tempi di esecuzione di HeapSort e MergeSort corrispondono al limite inferiore $Omega(n log n)$ nel caso pessimo stabilito dal teorema precedente. Pertanto, entrambi gli algoritmi raggiungono il limite inferiore a meno di un fattore costante.
 ]
 
 #note(title: "Conseguenze del limite inferiore")[
@@ -201,6 +211,10 @@ $ T(n, k) = Theta(n + k) $
 - Lo *spazio ausiliario* richiesto è $Theta(n + k)$ (per gli array $B$ e $C$), quindi l'algoritmo *non è in-place*.
 - Se $k$ è molto grande rispetto a $n$, sia il tempo che lo spazio diventano proibitivi.
 
+#observation[
+  Il Counting Sort supera il limite inferiore $Omega(n log n)$ perché *non è un algoritmo di ordinamento per confronti*: nel suo codice non compare alcun confronto tra elementi dell'input. Il Counting Sort utilizza i valori effettivi degli elementi come indici di un array, operando in modo completamente diverso dal modello dell'albero di decisione. Il limite inferiore $Omega(n log n)$ non si applica quando ci si allontana dal modello di ordinamento basato esclusivamente su confronti.
+]
+
 === Radix Sort
 
 Il *Radix Sort* ordina numeri interi (o stringhe) analizzando le singole cifre (o caratteri), dalla meno significativa (LSD, _Least Significant Digit_) alla più significativa (MSD, _Most Significant Digit_).
@@ -322,12 +336,38 @@ Se si utilizza il Counting Sort come algoritmo stabile, e i numeri sono rapprese
 La complessità totale è:
 $ T(n) = Theta(d (n + b)) $
 
+#lemma(titolo: "Complessità del Radix Sort (CLRS, Lemma 8.3)")[
+  Dati $n$ numeri di $d$ cifre, dove ogni cifra può assumere fino a $k$ valori possibili, la procedura Radix Sort ordina correttamente i numeri nel tempo $Theta(d(n + k))$, se l'ordinamento stabile utilizzato impiega un tempo $Theta(n + k)$.
+]
+
+#demonstration[
+  La correttezza del Radix Sort si dimostra per induzione sulla colonna da ordinare (come visto nel teorema precedente). L'analisi del tempo di esecuzione dipende dall'algoritmo stabile usato come subroutine. Se ogni cifra si trova nell'intervallo da $0$ a $k - 1$ (in modo che possa assumere $k$ valori possibili) e $k$ non è troppo grande, il Counting Sort è la scelta naturale. Ogni passaggio su $n$ numeri di $d$ cifre richiede tempo $Theta(n + k)$. Poiché ci sono $d$ passaggi, il tempo totale del Radix Sort è $Theta(d(n + k))$.
+]
+
+Quando $d$ è costante e $k = O(n)$, il Radix Sort viene eseguito in tempo lineare.
+
 ==== Scelta ottimale della base
 
+Più in generale, abbiamo una certa flessibilità nel modo in cui ripartire le singole chiavi in cifre.
+
+#lemma(titolo: "Analisi con rappresentazione in bit (CLRS, Lemma 8.4)")[
+  Dati $n$ numeri di $b$ bit e un intero positivo $r lt.eq b$, il Radix Sort ordina correttamente questi numeri nel tempo $Theta((b\/r)(n + 2^r))$, se l'algoritmo di ordinamento stabile usato richiede tempo $Theta(n + k)$ per input nell'intervallo da $0$ a $k$.
+]
+
+#demonstration[
+  Per un valore $r lt.eq b$, consideriamo ogni chiave come se avesse $d = ceil(b\/r)$ cifre di $r$ bit ciascuna. Ogni cifra è un numero intero compreso nell'intervallo da $0$ a $2^r - 1$, quindi possiamo utilizzare il Counting Sort con $k = 2^r - 1$. Ogni passaggio di Counting Sort richiede il tempo $Theta(n + 2^r)$; poiché ci sono $d$ passaggi, il tempo di esecuzione totale è $Theta(d(n + 2^r)) = Theta((b\/r)(n + 2^r))$.
+]
+
 #theorem(title: "Scelta ottimale della base per Radix Sort")[
-  Dati $n$ numeri interi rappresentabili con $r$ bit (cioè con valori in $[0, 2^r - 1]$), e scegliendo la base $b = 2^s$ con $s = floor(log_2 n)$ (quindi $b approx n$), il Radix Sort ordina in tempo:
-  $ T(n) = Theta(r / (log_2 n) dot n) $
-  Se $r = O(log n)$ (cioè i valori sono polinomiali in $n$), la complessità diventa $Theta(n)$: ordinamento lineare.
+  Dati $n$ numeri interi rappresentabili con $b$ bit (cioè con valori in $[0, 2^b - 1]$), e scegliendo $r = floor(log_2 n)$ (corrispondente alla base $2^r approx n$), il Radix Sort ordina in tempo:
+  $ T(n) = Theta(b / (log_2 n) dot n) $
+  Se $b = O(log n)$ (cioè i valori sono polinomiali in $n$), la complessità diventa $Theta(n)$: ordinamento lineare.
+]
+
+#demonstration[
+  Dati i valori di $n$ e $b$, scegliamo il valore di $r$ (con $r lt.eq b$) che minimizza l'espressione $(b\/r)(n + 2^r)$. Se $b < floor(log_2 n)$, allora per qualsiasi valore di $r lt.eq b$ si ha $(n + 2^r) = Theta(n)$. Pertanto, scegliendo $r = b$, si ottiene un tempo di esecuzione $(b\/b)(n + 2^b) = Theta(n)$, che è asintoticamente ottimale.
+
+  Se $b gt.eq floor(log_2 n)$, allora scegliendo $r = floor(log_2 n)$ si ottiene il tempo migliore a meno di un fattore costante. In questo caso si ha un tempo di esecuzione pari a $Theta(b n \/ log n)$. Aumentando $r$ oltre $floor(log_2 n)$, il termine $2^r$ nel numeratore cresce più rapidamente del termine $r$ nel denominatore; quindi, aumentando $r$ oltre $floor(log_2 n)$, si ottiene un tempo di esecuzione pari a $Omega(b n \/ log n)$. Se invece diminuiamo $r$ sotto $floor(log_2 n)$, il termine $b\/r$ cresce e il termine $n + 2^r$ resta $Theta(n)$.
 ]
 
 #note(title: "Intuizione sulla scelta della base")[
@@ -335,6 +375,10 @@ $ T(n) = Theta(d (n + b)) $
   - Con una base troppo piccola (es. $b = 2$), si hanno molte cifre ($d$ grande) e ogni passata è veloce ($n + 2$), ma il costo totale cresce.
   - Con una base troppo grande (es. $b = n^2$), si hanno poche cifre ma ogni passata richiede $Theta(n + n^2)$.
   - Il bilanciamento ottimale si ottiene con $b approx n$, che dà $d = r \/ log n$ passate ciascuna di costo $Theta(n)$.
+]
+
+#observation[
+  *Radix Sort è preferibile a un ordinamento basato su confronti?* Se $b = O(log n)$, come accade spesso quando i valori sono polinomiali in $n$, il Radix Sort viene eseguito in tempo $Theta(n)$, che sembra migliore di $Theta(n log n)$. Tuttavia, i fattori costanti nascosti nella notazione $Theta$ sono diversi: sebbene il Radix Sort richieda meno passaggi sulle $n$ chiavi, ogni passaggio di Radix Sort può richiedere significativamente più tempo di un confronto nel Quicksort. La scelta dell'algoritmo di ordinamento ottimale dipende dalle caratteristiche dell'implementazione, della macchina (ad esempio, Quicksort usa le cache hardware in modo più efficiente), e dei dati di input. Inoltre, il Radix Sort con Counting Sort come subroutine non ordina sul posto, mentre molti ordinamenti per confronti (come Quicksort) lo fanno. Se la memoria è limitata, un algoritmo in-place come Quicksort potrebbe essere preferibile.
 ]
 
 === Bucket Sort

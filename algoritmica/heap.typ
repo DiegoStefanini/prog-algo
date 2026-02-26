@@ -50,6 +50,14 @@ $ "Parent"(i) = floor(i / 2) , quad "Left"(i) = 2i , quad "Right"(i) = 2i + 1 $
   ```
 ]
 
+#note(title: "Attributi dell'array")[
+  Un array $A$ che rappresenta un heap possiede due attributi distinti:
+  - $A."length"$: il numero totale di elementi allocati nell'array.
+  - $A."heap-size"$: il numero di elementi dell'heap effettivamente memorizzati in $A$, con $0 <= A."heap-size" <= A."length"$.
+
+  Solo gli elementi in $A[1 .. A."heap-size"]$ sono elementi validi dell'heap. Le posizioni $A[A."heap-size" + 1 .. A."length"]$ possono contenere valori che non appartengono all'heap (ad esempio, gli elementi già estratti durante HeapSort).
+]
+
 #note(title: "Efficienza della rappresentazione")[
   Questa rappresentazione implicita presenta diversi vantaggi:
   - *Nessun puntatore*: la relazione padre-figlio è codificata dall'aritmetica sugli indici, con notevole risparmio di spazio.
@@ -60,13 +68,9 @@ $ "Parent"(i) = floor(i / 2) , quad "Left"(i) = 2i , quad "Right"(i) = 2i + 1 $
 #example(title: "Rappresentazione array di un max-heap")[
   Consideriamo l'array $A = [16, 14, 10, 8, 7, 9, 3, 2, 4, 1]$ con $n = 10$.
 
-  Esso corrisponde al seguente max-heap:
-  - Radice: $A[1] = 16$
-  - Figli di $16$: $A[2] = 14$ (sinistro), $A[3] = 10$ (destro)
-  - Figli di $14$: $A[4] = 8$ (sinistro), $A[5] = 7$ (destro)
-  - Figli di $10$: $A[6] = 9$ (sinistro), $A[7] = 3$ (destro)
-  - Figli di $8$: $A[8] = 2$ (sinistro), $A[9] = 4$ (destro)
-  - Figlio di $7$: $A[10] = 1$ (sinistro; il destro non esiste)
+  Esso corrisponde al seguente max-heap (l'albero sopra e la rappresentazione array sotto):
+
+  #heap-viz((16, 14, 10, 8, 7, 9, 3, 2, 4, 1))
 
   Si può verificare che la proprietà di max-heap vale per ogni nodo: $A["Parent"(i)] >= A[i]$ per $i = 2, dots, 10$.
 ]
@@ -131,6 +135,10 @@ L'idea è semplice: si confronta $A[i]$ con i suoi due figli; si scambia $A[i]$ 
   A ogni chiamata ricorsiva, la procedura scende di un livello nell'heap. Il numero massimo di livelli che può attraversare è l'altezza $h$ del nodo di partenza. Poiché ogni livello richiede lavoro $O(1)$ (un confronto e un eventuale scambio), il costo totale è $O(h)$.
 
   L'altezza massima di un nodo nell'heap è $floor(log_2 n)$, da cui $T(n) = O(log n)$.
+
+  In alternativa, il risultato si ottiene mediante una ricorrenza sulla dimensione del sottoalbero. I sottoalberi dei figli di un nodo hanno ciascuno una dimensione che non supera $2n\/3$ --- il caso peggiore si verifica quando l'ultimo livello dell'albero è riempito esattamente a metà, cosicché il sottoalbero sinistro è il più grande possibile. Il tempo di esecuzione di `Max-Heapify` soddisfa dunque la ricorrenza:
+  $ T(n) <= T(2n\/3) + Theta(1) $
+  La soluzione, per il caso 2 del Teorema dell'esperto (con $a = 1$, $b = 3\/2$, $f(n) = Theta(1)$), è $T(n) = O(log n)$.
 ]
 
 #example(title: "Max-Heapify passo-passo")[
@@ -506,6 +514,20 @@ Per aumentare la chiave di un elemento, si aggiorna il valore e si fa "risalire"
 ]
 
 Complessità: $O(log n)$. Nel caso pessimo l'elemento risale dalla foglia fino alla radice, percorrendo $O(log n)$ livelli.
+
+La correttezza della procedura si dimostra mediante il seguente invariante di ciclo.
+
+#definition(title: "Invariante di ciclo per Heap-Increase-Key")[
+  All'inizio di ogni iterazione del ciclo `while`, l'array $A[1 .. "heapsize"]$ soddisfa la proprietà del max-heap, con al più una possibile violazione: $A[i]$ potrebbe essere maggiore di $A["Parent"(i)]$.
+]
+
+#demonstration[
+  *Inizializzazione*: dopo l'assegnamento $A[i] := "key"$ alla riga 3 dello pseudocodice, l'unica possibile violazione della proprietà di max-heap si trova nella coppia $(A[i], A["Parent"(i)])$, poiché il valore di $A[i]$ è stato aumentato. L'invariante vale.
+
+  *Mantenimento*: se $A["Parent"(i)] < A[i]$, lo scambio fa sì che il nodo $i$ soddisfi la proprietà rispetto ai propri figli (il padre, ora in posizione $i$, è almeno grande quanto il vecchio valore di $A[i]$, che a sua volta era $>=$ dei figli di $i$). Dopo lo scambio, $i$ viene aggiornato a $"Parent"(i)$: l'unica possibile violazione si è spostata un livello più in alto.
+
+  *Terminazione*: il ciclo termina quando $i = 1$ (radice, nessun padre) oppure $A["Parent"(i)] >= A[i]$ (nessuna violazione). In entrambi i casi l'intero array soddisfa la proprietà del max-heap.
+]
 
 ===== Insert
 

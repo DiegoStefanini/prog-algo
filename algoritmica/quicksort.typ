@@ -127,6 +127,21 @@ $ T(n) = T(n-1) + T(0) + Theta(n) = T(n-1) + Theta(n) $
 Svolgendo per sostituzione:
 $ T(n) = sum_(k=1)^n Theta(k) = Theta(n^2) $
 
+==== Dimostrazione formale: $T(n) = O(n^2)$ per sostituzione
+
+Per dimostrare rigorosamente il limite superiore, si osserva che nel caso pessimo la ricorrenza è:
+$ T(n) = max_(0 <= q <= n-1) (T(q) + T(n - q - 1)) + Theta(n) $
+dove $q$ varia da $0$ a $n - 1$ perché Partition genera due sottoproblemi con dimensione totale $n - 1$.
+
+Supponiamo $T(n) <= c n^2$ per qualche costante $c > 0$. Sostituendo nella ricorrenza:
+$ T(n) <= max_(0 <= q <= n-1) (c q^2 + c(n - q - 1)^2) + Theta(n) $
+
+L'espressione $q^2 + (n - q - 1)^2$ raggiunge il massimo agli estremi dell'intervallo $[0, n-1]$ (la derivata seconda rispetto a $q$ è positiva, quindi il punto critico è un minimo). Il massimo è $(n - 1)^2 <= n^2 - 2n + 1$. Riprendendo:
+$ T(n) <= c n^2 - c(2n - 1) + Theta(n) <= c n^2 $
+purché $c$ sia sufficientemente grande da far prevalere $c(2n - 1)$ sul termine $Theta(n)$.
+
+Analogamente si dimostra $T(n) = Omega(n^2)$ nel caso sbilanciato, quindi $T(n) = Theta(n^2)$ nel caso pessimo.
+
 #note(title: "Worst case uguale a Insertion Sort")[
   Nel caso pessimo, QuickSort ha la stessa complessità $Theta(n^2)$ di Insertion Sort e Selection Sort. Tuttavia, questo caso è raro in pratica e può essere evitato con la randomizzazione del pivot.
 ]
@@ -151,6 +166,10 @@ $ T(n) = T(9n\/10) + T(n\/10) + Theta(n) $
 si risolve comunque in $Theta(n log n)$, poiché l'altezza dell'albero di ricorsione è $log_(10\/9) n = O(log n)$.
 
 Nella pratica, è estremamente improbabile che il pivot produca sempre partizioni degeneri. Il mix di "buone" e "cattive" partizioni che si presenta nel caso medio produce comunque un comportamento $Theta(n log n)$.
+
+#observation[
+  *Partizioni buone e cattive alternate.* Supponiamo che le partizioni buone e cattive si alternino nei livelli dell'albero di ricorsione. Una partizione "cattiva" nella radice produce sottoproblemi di dimensione $0$ e $n - 1$ con costo $Theta(n)$; al livello successivo, una partizione "buona" divide $n - 1$ in $(n-1)/2 - 1$ e $(n-1)/2$ con costo $Theta(n - 1)$. Il costo combinato dei due livelli è $Theta(n) + Theta(n - 1) = Theta(n)$, lo stesso costo di un singolo livello con partizione bilanciata che produce due sottoproblemi di dimensione $(n-1)/2$. Quindi il costo della partizione cattiva viene *assorbito* da quello della partizione buona, e il tempo complessivo resta $O(n log n)$.
+]
 
 == QuickSort Randomizzato
 
@@ -183,7 +202,17 @@ Per eliminare la dipendenza dal caso peggiore su input particolari (ad esempio, 
 
 === Analisi del numero atteso di confronti
 
-Per analizzare formalmente il caso medio, si conta il *numero atteso di confronti* eseguiti dall'algoritmo.
+Il tempo di esecuzione di QuickSort è dominato dal tempo impiegato nella procedura Partition. Ogni volta che viene chiamata Partition, viene selezionato un pivot che non sarà più incluso nelle successive chiamate ricorsive. Quindi ci possono essere al massimo $n$ chiamate di Partition durante l'intera esecuzione dell'algoritmo. Ogni chiamata di Partition svolge una quantità costante di lavoro più un tempo proporzionale al numero di confronti effettuati nel ciclo.
+
+#lemma(titolo: "Tempo di esecuzione e confronti")[
+  Sia $X$ il numero totale di confronti svolti in tutte le chiamate di Partition durante l'esecuzione di QuickSort su un array di $n$ elementi. Allora il tempo di esecuzione di QuickSort è $O(n + X)$.
+]
+
+#demonstration[
+  L'algoritmo effettua al massimo $n$ chiamate di Partition, ciascuna delle quali svolge una quantità costante di lavoro e poi esegue il ciclo un certo numero di volte. Ogni iterazione del ciclo effettua esattamente un confronto. Sommando il lavoro costante ($O(n)$ in totale) e i confronti ($X$ in totale), il tempo complessivo è $O(n + X)$.
+]
+
+Per analizzare formalmente il caso medio, si conta dunque il *numero atteso di confronti* eseguiti dall'algoritmo.
 
 Siano $z_1, z_2, ..., z_n$ gli elementi di $A$ in ordine crescente di valore. Definiamo la variabile aleatoria indicatrice:
 $ X_(i j) = cases(

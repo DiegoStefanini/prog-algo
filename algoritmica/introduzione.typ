@@ -162,3 +162,30 @@ Dato un problema computazionale, un algoritmo che intende risolverlo deve soddis
 #note[
   Un algoritmo che produce risultati corretti ma non termina su certi input non è considerato un algoritmo valido. Analogamente, un algoritmo che termina sempre ma produce risultati errati non è utile. Sono necessarie _entrambe_ le proprietà: correttezza e terminazione.
 ]
+
+== Algoritmi come tecnologia
+
+Si potrebbe pensare che, data la velocità dei calcolatori moderni, l'efficienza degli algoritmi sia un aspetto secondario. Non è così: la scelta dell'algoritmo può fare la differenza tra una soluzione praticabile e una inutilizzabile, persino su hardware potente.
+
+#example(title: "Insertion Sort vs Merge Sort")[
+  Consideriamo due algoritmi per l'ordinamento: l'Insertion Sort, con complessità $Theta(n^2)$ nel caso pessimo, e il Merge Sort, con complessità $Theta(n log n)$.
+
+  Supponiamo di voler ordinare $n = 10^7$ elementi (dieci milioni). Un calcolatore veloce $A$ esegue $10^10$ operazioni al secondo e utilizza l'Insertion Sort; un calcolatore lento $B$ esegue $10^7$ operazioni al secondo e utilizza il Merge Sort.
+
+  Con costanti ragionevoli ($2n^2$ per l'Insertion Sort, $50 n log n$ per il Merge Sort):
+
+  #figure(
+    table(
+      columns: 3,
+      [*Aspetto*], [*Calcolatore $A$ (Insertion Sort)*], [*Calcolatore $B$ (Merge Sort)*],
+      [Velocità], [$10^10$ op/s], [$10^7$ op/s],
+      [Costo], [$2 dot (10^7)^2 = 2 dot 10^14$ op], [$50 dot 10^7 dot log_2 10^7 approx 1.16 dot 10^10$ op],
+      [Tempo], [$frac(2 dot 10^14, 10^10) = 20000$ s $approx$ 5.5 ore], [$frac(1.16 dot 10^10, 10^7) approx 1163$ s $approx$ 19 min],
+    ),
+    caption: [Confronto tra un calcolatore veloce con un algoritmo lento e un calcolatore lento con un algoritmo efficiente.]
+  )
+
+  Il calcolatore $B$, pur essendo 1000 volte più lento, termina quasi 20 volte prima del calcolatore $A$. Per $n$ ancora più grande, il divario aumenta ulteriormente.
+]
+
+Questo esempio illustra un principio fondamentale: gli algoritmi sono una *tecnologia*, al pari dell'hardware. Un buon algoritmo su una macchina modesta può superare un cattivo algoritmo su una macchina potente. Per questa ragione, lo studio dell'efficienza algoritmica è parte integrante dell'informatica.

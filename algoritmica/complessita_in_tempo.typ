@@ -51,15 +51,15 @@ A parità di complessità in tempo, si cerca di minimizzare anche la complessit�
 
 Consideriamo il problema di trovare il valore minimo in un array.
 
-*Input*: array $A[1..n]$ di interi. \
-*Output*: il valore minimo $m$ tale che $m = A[i]$ per qualche $i in {1, ..., n}$ e $m <= A[j]$ per ogni $j in {1, ..., n}$.
+*Input*: array $A[0..n-1]$ di interi. \
+*Output*: il valore minimo $m$ tale che $m = A[i]$ per qualche $i in {0, ..., n-1}$ e $m <= A[j]$ per ogni $j in {0, ..., n-1}$.
 
 #algorithm(title: "Minimo di un array")[
   ```
   int min(int[] A, int n){
-      int min = A[1];
-      int i = 2;
-      while(i <= n){
+      int min = A[0];
+      int i = 1;
+      while(i <= n-1){
           if(A[i] < min){
               min := A[i];
           }
@@ -80,15 +80,15 @@ dove $c_1, c_3$ sono costanti per le operazioni fuori dal ciclo e $c_2$ è il co
 
 Consideriamo il problema della ricerca lineare (o sequenziale).
 
-*Input*: array $A[1..n]$ di interi, intero $k$. \
+*Input*: array $A[0..n-1]$ di interi, intero $k$. \
 *Output*: il minimo indice $i$ tale che $A[i] = k$, oppure $-1$ se $k in.not A$.
 
 #algorithm(title: "Ricerca lineare (CercaK)")[
   ```
   int cercaK(int[] A, int n, int k){
-      int i = 1;
+      int i = 0;
       bool trovato = false;
-      while((!trovato) && (i <= n)){
+      while((!trovato) && (i <= n-1)){
           if(A[i] == k){
               trovato := true;
           } else {
@@ -106,7 +106,7 @@ Consideriamo il problema della ricerca lineare (o sequenziale).
 
 *Analisi del costo.* A differenza dell'esempio precedente, il numero di iterazioni dipende dalla posizione di $k$ nell'array:
 
-- *Caso ottimo*: $A[1] = k$, il ciclo esegue una sola iterazione. Il costo è $T^"best"(n) = Theta(1)$ (costante).
+- *Caso ottimo*: $A[0] = k$, il ciclo esegue una sola iterazione. Il costo è $T^"best"(n) = Theta(1)$ (costante).
 - *Caso pessimo*: $k in.not A$, il ciclo scorre l'intero array senza trovare $k$. Il costo è $T^"worst"(n) = Theta(n)$ (lineare).
 - *Caso medio*: assumendo che $k$ sia presente e che ciascuna posizione sia equiprobabile, il numero medio di confronti è $(n+1)/2$, dunque $T^"avg"(n) = Theta(n)$.
 
@@ -147,6 +147,7 @@ Si scrive $f(n) = Theta(g(n))$ (con abuso di notazione, poiché $Theta(g(n))$ è
 )
 
 Intuitivamente, $f(n) = Theta(g(n))$ significa che, per $n$ sufficientemente grande, $f(n)$ cresce *allo stesso ritmo* di $g(n)$, a meno di costanti moltiplicative.
+Esempio: $Theta(n)$ vuol dire "cresce proporzionalmente come n"
 
 === Notazione $O$ -- Limite asintotico superiore
 
@@ -165,7 +166,7 @@ Si scrive $f(n) = O(g(n))$.
 )
 
 La notazione $O$ fornisce un *maggiorante* alla crescita di $f(n)$. Si utilizza tipicamente per esprimere il costo nel caso pessimo.
-
+Esempio: $O(n)$ vuol dire che "al massimo cresce come n", non puoi fare peggio di n
 === Notazione $Omega$ -- Limite asintotico inferiore
 
 #definition(title: [$Omega$ (Omega grande)])[
@@ -183,7 +184,7 @@ Si scrive $f(n) = Omega(g(n))$.
 )
 
 La notazione $Omega$ fornisce un *minorante* alla crescita di $f(n)$. Si utilizza tipicamente per esprimere il costo nel caso ottimo o per dimostrare limiti inferiori.
-
+Esempio: $Omega(n)$ dice che "cresce almeno come n", non puoi fare meglio di n
 === Relazione tra le notazioni
 
 #theorem(title: "Relazione tra " + $Theta$+ ", " + $O$ + " e " + $Omega$)[
@@ -245,6 +246,63 @@ Basta prendere $c_1 = c_2 = c = 1$ e $n_0 = 1$ nelle rispettive definizioni.
   Le proprietà di transitività, riflessività e simmetria ricalcano quelle delle relazioni $<=$, $>=$ e $=$.
 ]
 
+=== Notazione $o$ -- Limite superiore non stretto
+
+Le notazioni $O$ e $Omega$ forniscono limiti che possono essere stretti o meno. Per esprimere un limite superiore che *non* è asintoticamente stretto, si utilizza la notazione $o$ (o piccolo).
+
+#definition(title: [$o$ (o piccolo)])[
+  Sia $g(n)$ una funzione. L'insieme $o(g(n))$ è definito come:
+  $ o(g(n)) = {f(n) mid(|) forall c > 0, exists n_0 > 0 : forall n >= n_0, quad 0 <= f(n) < c dot g(n)} $
+
+  Se $f(n) in o(g(n))$, si dice che $f(n)$ è *asintoticamente trascurabile* rispetto a $g(n)$.
+]
+
+La differenza cruciale con $O$ è nel quantificatore: nella definizione di $O$ la costante $c > 0$ è *esistenziale* (basta trovarne una), mentre nella definizione di $o$ è *universale* (la disuguaglianza deve valere per *ogni* $c > 0$). Intuitivamente, $f(n) = o(g(n))$ significa che $f(n)$ diventa insignificante rispetto a $g(n)$ al crescere di $n$:
+
+$ f(n) = o(g(n)) quad arrow.l.r.double quad lim_(n -> infinity) frac(f(n), g(n)) = 0 $
+
+#example(title: [$2n = o(n^2)$ ma $2n^2 eq.not o(n^2)$])[
+  Per $2n = o(n^2)$: si ha $lim_(n -> infinity) frac(2n, n^2) = lim_(n -> infinity) frac(2, n) = 0$, dunque $2n in o(n^2)$.
+
+  Per $2n^2 eq.not o(n^2)$: si ha $lim_(n -> infinity) frac(2n^2, n^2) = 2 eq.not 0$, dunque $2n^2 in.not o(n^2)$. Si noti che $2n^2 in O(n^2)$, poiché basta scegliere $c = 2$: la notazione $O$ ammette limiti stretti, la notazione $o$ no.
+]
+
+=== Notazione $omega$ -- Limite inferiore non stretto
+
+Analogamente, per esprimere un limite inferiore *non* asintoticamente stretto, si usa la notazione $omega$ (omega piccolo).
+
+#definition(title: [$omega$ (omega piccolo)])[
+  Sia $g(n)$ una funzione. L'insieme $omega(g(n))$ è definito come:
+  $ omega(g(n)) = {f(n) mid(|) forall c > 0, exists n_0 > 0 : forall n >= n_0, quad 0 <= c dot g(n) < f(n)} $
+
+  Se $f(n) in omega(g(n))$, si dice che $f(n)$ *domina asintoticamente* $g(n)$.
+]
+
+La relazione tra $o$ e $omega$ è analoga a quella tra $O$ e $Omega$:
+
+$ f(n) = omega(g(n)) quad arrow.l.r.double quad g(n) = o(f(n)) $
+
+Equivalentemente:
+
+$ f(n) = omega(g(n)) quad arrow.l.r.double quad lim_(n -> infinity) frac(f(n), g(n)) = infinity $
+
+#example(title: [$frac(n^2, 2) = omega(n)$ ma $frac(n^2, 2) eq.not omega(n^2)$])[
+  Per $frac(n^2, 2) = omega(n)$: si ha $lim_(n -> infinity) frac(n^2 \/ 2, n) = lim_(n -> infinity) frac(n, 2) = infinity$, dunque $frac(n^2, 2) in omega(n)$.
+
+  Per $frac(n^2, 2) eq.not omega(n^2)$: si ha $lim_(n -> infinity) frac(n^2 \/ 2, n^2) = frac(1, 2) eq.not infinity$, dunque $frac(n^2, 2) in.not omega(n^2)$.
+]
+
+#note(title: "Analogia completa con le relazioni d'ordine")[
+  Estendendo l'analogia introdotta in precedenza:
+  - $f(n) = o(g(n))$ corrisponde a $f < g$ (strettamente minore)
+  - $f(n) = omega(g(n))$ corrisponde a $f > g$ (strettamente maggiore)
+  - $f(n) = O(g(n))$ corrisponde a $f lt.eq g$
+  - $f(n) = Omega(g(n))$ corrisponde a $f gt.eq g$
+  - $f(n) = Theta(g(n))$ corrisponde a $f approx g$
+
+  Si noti che $f(n) = Theta(g(n))$ implica $f(n) in.not o(g(n))$ e $f(n) in.not omega(g(n))$, proprio come $a = b$ implica $a lt.not b$ e $a gt.not b$.
+]
+"claude" inserire tabella con complessità piu comuni e come si calcola in pratica.
 === Esercizi sulla notazione asintotica
 
 #example(title: "Dimostrare che " + $3n^2 - 2n - 1 in Theta(n^2)$)[

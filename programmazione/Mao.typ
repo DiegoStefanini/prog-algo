@@ -339,11 +339,19 @@ Una costante intera $n$ ha sempre tipo `int`, indipendentemente dall'ambiente. L
 ]
 
 #align(center)[
-  #box(stroke: (bottom: 1pt), inset: 3pt)[$ $] \
-  $Gamma tack "true" : "bool"$ #h(1cm) (T-True)
-  #h(1cm)
-  #box(stroke: (bottom: 1pt), inset: 3pt)[$ $] \
-  $Gamma tack "false" : "bool"$ #h(1cm) (T-False)
+  #grid(
+    columns: (auto, auto),
+    column-gutter: 2cm,
+    align: center,
+    [
+      #box(stroke: (bottom: 1pt), inset: 3pt)[$ $] \
+      $Gamma tack "true" : "bool"$ #h(1cm) (T-True)
+    ],
+    [
+      #box(stroke: (bottom: 1pt), inset: 3pt)[$ $] \
+      $Gamma tack "false" : "bool"$ #h(1cm) (T-False)
+    ],
+  )
 ]
 
 ==== Variabili

@@ -6,5 +6,9 @@
       "Bash(powershell -ExecutionPolicy Bypass -File fix_mao.ps1:*)",
       "Bash(powershell:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }

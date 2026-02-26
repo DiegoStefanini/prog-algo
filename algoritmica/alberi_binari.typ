@@ -1,5 +1,30 @@
 #import "../template.typ": *
 
+== Insiemi dinamici e Dizionari
+
+Molti algoritmi richiedono la capacità di memorizzare un insieme di dati che viene modificato nel tempo: si inseriscono nuovi elementi, se ne cancellano altri, si effettuano ricerche. Un tale insieme prende il nome di *insieme dinamico*.
+
+#definition(title: "Insieme dinamico")[
+  Un *insieme dinamico* è una struttura dati che mantiene un insieme $S$ di elementi, ciascuno identificato da una *chiave*, e supporta operazioni di modifica e di interrogazione. Le operazioni fondamentali sono:
+  - *Operazioni di ricerca* (query):
+    - `Search(S, k)`: dato un insieme $S$ e una chiave $k$, restituisce un puntatore $x$ a un elemento in $S$ tale che $x."key" = k$, oppure $"NIL"$ se tale elemento non esiste
+    - `Minimum(S)`: restituisce l'elemento di $S$ con la chiave più piccola
+    - `Maximum(S)`: restituisce l'elemento di $S$ con la chiave più grande
+    - `Successor(S, x)`: restituisce l'elemento di $S$ con la più piccola chiave maggiore di $x."key"$, oppure $"NIL"$ se $x$ ha la chiave massima
+    - `Predecessor(S, x)`: restituisce l'elemento di $S$ con la più grande chiave minore di $x."key"$, oppure $"NIL"$ se $x$ ha la chiave minima
+  - *Operazioni di modifica*:
+    - `Insert(S, x)`: aggiunge l'elemento $x$ all'insieme $S$
+    - `Delete(S, x)`: rimuove l'elemento $x$ dall'insieme $S$
+]
+
+#definition(title: "Dizionario")[
+  Un *dizionario* è un tipo di dato astratto (ADT) che supporta le operazioni `Search`, `Insert` e `Delete`. Quando un insieme dinamico supporta anche `Minimum`, `Maximum`, `Successor` e `Predecessor`, si parla spesso di *dizionario ordinato*.
+]
+
+#observation[
+  La scelta della struttura dati concreta per implementare un dizionario ha un impatto diretto sulle prestazioni: ad esempio, una lista concatenata non ordinata permette inserimento in $O(1)$ ma ricerca in $O(n)$, mentre un albero binario di ricerca bilanciato garantisce tutte le operazioni in $O(log n)$. La scelta migliore dipende dalla frequenza relativa delle diverse operazioni.
+]
+
 == Alberi Binari
 
 === Definizione e terminologia
@@ -38,6 +63,57 @@ Ogni nodo di un albero binario contiene:
   // right  : puntatore al figlio destro
   // parent : puntatore al padre
   ```
+]
+
+=== Rappresentazione di alberi con numero arbitrario di figli
+
+Negli alberi binari ogni nodo ha al più due figli, ma in molte applicazioni occorre rappresentare alberi in cui ogni nodo può avere un numero arbitrario di figli ($k$-ari o generici). Una soluzione diretta richiederebbe di memorizzare in ogni nodo un array di puntatori ai figli, ma questo è inefficiente se il numero di figli varia molto da nodo a nodo.
+
+#definition(title: "Rappresentazione figlio sinistro - fratello destro")[
+  La rappresentazione *figlio sinistro - fratello destro* (left-child, right-sibling) consente di rappresentare un albero con numero arbitrario di figli utilizzando solo due puntatori per nodo:
+  - `left-child`: puntatore al *primo figlio* (il figlio più a sinistra) del nodo
+  - `right-sibling`: puntatore al *fratello destro* del nodo, cioè il nodo immediatamente a destra con lo stesso padre
+  - `parent`: puntatore al nodo padre (opzionale)
+
+  Se un nodo non ha figli, `left-child` vale $"NIL"$. Se un nodo è l'ultimo figlio del padre, `right-sibling` vale $"NIL"$.
+]
+
+#example(title: "Albero generico e rappresentazione figlio-fratello")[
+  Consideriamo un albero in cui la radice $A$ ha tre figli $B, C, D$; il nodo $B$ ha due figli $E, F$; il nodo $D$ ha un figlio $G$.
+
+  L'albero originale (a sinistra) e la sua rappresentazione figlio-fratello come albero binario (a destra):
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    align(center)[
+      _Albero originale_
+      #albero-binario(
+        (("A", 0, 0), ("B", -1.5, -1.3), ("C", 0, -1.3), ("D", 1.5, -1.3), ("E", -2.2, -2.6), ("F", -0.8, -2.6), ("G", 1.5, -2.6)),
+        ((0, 1), (0, 2), (0, 3), (1, 4), (1, 5), (3, 6)),
+      )
+    ],
+    align(center)[
+      _Figlio sx - Fratello dx_
+      #albero-binario(
+        (("A", 0, 0), ("B", -1.2, -1.3), ("E", -2.2, -2.6), ("C", 0.2, -2.6), ("F", -1.2, -3.9), ("D", 1.6, -3.9), ("G", 0.6, -5.2)),
+        ((0, 1), (1, 2), (1, 3), (2, 4), (3, 5), (5, 6)),
+      )
+    ],
+  )
+
+  Nella rappresentazione figlio sinistro - fratello destro:
+  - $A$: `left-child` $= B$, `right-sibling` $= "NIL"$
+  - $B$: `left-child` $= E$, `right-sibling` $= C$
+  - $C$: `left-child` $= "NIL"$, `right-sibling` $= D$
+  - $D$: `left-child` $= G$, `right-sibling` $= "NIL"$
+  - $E$: `left-child` $= "NIL"$, `right-sibling` $= F$
+  - $F$: `left-child` $= "NIL"$, `right-sibling` $= "NIL"$
+  - $G$: `left-child` $= "NIL"$, `right-sibling` $= "NIL"$
+]
+
+#observation[
+  Questa rappresentazione è particolarmente efficiente perché utilizza $O(n)$ spazio totale (due puntatori per nodo), indipendentemente dal grado massimo dell'albero. In pratica, trasforma un albero generico in un albero binario dove il figlio sinistro corrisponde al primo figlio e il figlio destro corrisponde al fratello successivo.
 ]
 
 === Proprietà degli alberi binari
@@ -336,6 +412,29 @@ Si distinguono due casi:
 
 *Complessità:* $O(h)$, poiché scendiamo dalla radice fino a una posizione vuota.
 
+#example(title: "Inserimento in un BST")[
+  Inseriamo la chiave $6$ nel seguente BST. L'algoritmo scende dalla radice confrontando $6$ con ogni nodo: $6 < 8$ (sinistra), $6 > 4$ (destra), $6 > 5$ (destra). Il nodo viene inserito come figlio destro di $5$.
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    align(center)[
+      _Prima_
+      #albero-binario(
+        (([8], 0, 0), ([4], -1.2, -1.3), ([12], 1.2, -1.3), ([2], -2, -2.6), ([5], -0.4, -2.6), ([10], 0.4, -2.6), ([14], 2, -2.6)),
+        ((0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)),
+      )
+    ],
+    align(center)[
+      _Dopo Insert(T, 6)_
+      #albero-binario(
+        (([8], 0, 0), ([4], -1.2, -1.3), ([12], 1.2, -1.3), ([2], -2, -2.6), ([5], -0.4, -2.6), ([10], 0.4, -2.6), ([14], 2, -2.6), ([6], 0.4, -3.9)),
+        ((0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6), (4, 7)),
+      )
+    ],
+  )
+]
+
 ==== Cancellazione
 
 La cancellazione è l'operazione più complessa su un BST. Si distinguono tre casi in base alla struttura del nodo $z$ da eliminare.
@@ -402,9 +501,48 @@ Utilizzando `transplant`, la cancellazione è:
 
 *Complessità:* $O(h)$, poiché `treeMinimum` richiede $O(h)$ nel caso peggiore e `transplant` richiede $O(1)$ (solo operazioni di puntatori).
 
+#observation[
+  La correttezza della procedura `treeDelete` si basa sul fatto che, nel Caso 3, il successore $y$ di $z$ (il minimo del sottoalbero destro) non ha figlio sinistro. Sostituendo $z$ con $y$ e spostando i sottoalberi in modo appropriato, la proprietà BST è preservata: tutte le chiavi nel nuovo sottoalbero sinistro di $y$ erano nel sottoalbero sinistro di $z$ (dunque minori di $y."key"$), e tutte le chiavi nel nuovo sottoalbero destro di $y$ erano nel sottoalbero destro di $z$ escluso $y$ (dunque maggiori o uguali a $y."key"$).
+]
+
+#example(title: "Cancellazione da un BST — Caso 3")[
+  Cancelliamo il nodo con chiave $8$ (la radice) dal BST. Poiché $8$ ha due figli, troviamo il suo successore: il minimo del sottoalbero destro è $10$. Sostituiamo $8$ con $10$ e rimuoviamo $10$ dalla posizione originale (Caso 1, foglia).
+
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 1em,
+    align(center)[
+      _Prima: Delete(T, 8)_
+      #albero-binario(
+        (([8], 0, 0), ([4], -1.2, -1.3), ([12], 1.2, -1.3), ([2], -2, -2.6), ([5], -0.4, -2.6), ([10], 0.4, -2.6), ([14], 2, -2.6)),
+        ((0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)),
+      )
+    ],
+    align(center)[
+      _Dopo: 10 sostituisce 8_
+      #albero-binario(
+        (([10], 0, 0), ([4], -1.2, -1.3), ([12], 1.2, -1.3), ([2], -2, -2.6), ([5], -0.4, -2.6), ([14], 1.2, -2.6)),
+        ((0, 1), (0, 2), (1, 3), (1, 4), (2, 5)),
+      )
+    ],
+  )
+]
+
 === Analisi della complessità
 
 Le prestazioni di un BST dipendono criticamente dalla sua altezza $h$.
+
+#theorem(title: "Complessità delle operazioni su BST")[
+  Su un albero binario di ricerca di altezza $h$, le operazioni Search, Minimum, Maximum, Successor, Predecessor, Insert e Delete possono essere eseguite ciascuna in tempo $O(h)$.
+]
+
+#demonstration[
+  Ciascuna delle operazioni di query (Search, Minimum, Maximum, Successor, Predecessor) percorre al più un cammino dalla radice a una foglia oppure da un nodo alla radice, visitando al più $h + 1$ nodi e spendendo tempo $O(1)$ per ciascuno.
+
+  Per Insert: la procedura `treeInsert` scende dalla radice fino a trovare una posizione $"NIL"$ dove agganciare il nuovo nodo, percorrendo al più $h + 1$ nodi.
+
+  Per Delete: la procedura `treeDelete` richiede al più una chiamata a `treeMinimum` (che costa $O(h)$) e un numero costante di operazioni `transplant` (ciascuna in $O(1)$). Il costo totale è $O(h)$.
+]
 
 #figure(
   table(

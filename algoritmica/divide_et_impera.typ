@@ -253,6 +253,18 @@ La procedura `merge` fonde due sotto-array ordinati $A[p..q]$ e $A[q+1..r]$ in u
   La procedura `merge` utilizza due *sentinelle* $+infinity$ alla fine degli array ausiliari $L$ e $R$: quando un array ausiliario è stato completamente percorso, la sentinella garantisce che il confronto selezioni sempre l'elemento dall'altro array, senza necessità di controlli aggiuntivi sugli indici. Ogni iterazione del ciclo `while` copia esattamente un elemento in $A$, per un totale di $n_1 + n_2 = r - p + 1$ iterazioni. La complessità di `merge` è dunque $Theta(n)$.
 ]
 
+=== Correttezza di Merge
+
+La correttezza della procedura `merge` si dimostra tramite la seguente *invariante di ciclo* sul ciclo `while(k <= r)`:
+
+*Invariante:* all'inizio di ogni iterazione del ciclo, il sotto-array $A[p..k-1]$ contiene i $k - p$ elementi più piccoli di $L[1..n_1+1]$ e $R[1..n_2+1]$, ordinati. Inoltre, $L[i]$ e $R[j]$ sono i più piccoli elementi dei rispettivi array che non sono ancora stati copiati in $A$.
+
+- *Inizializzazione:* prima della prima iterazione, $k = p$ e il sotto-array $A[p..k-1]$ è vuoto. Si ha $i = 1$ e $j = 1$, dunque $L[1]$ e $R[1]$ sono i più piccoli elementi non ancora copiati.
+
+- *Conservazione:* supponiamo che l'invariante sia vera all'inizio di un'iterazione. Se $L[i] <= R[j]$, allora $L[i]$ è il più piccolo elemento non ancora copiato in $A$; viene posto in $A[k]$ e $i$ viene incrementato. Il sotto-array $A[p..k]$ contiene ora i $k - p + 1$ elementi più piccoli, ordinati. Il caso $L[i] > R[j]$ è simmetrico. In entrambi i casi, incrementando $k$ si ripristina l'invariante.
+
+- *Conclusione:* alla terminazione, $k = r + 1$. Per l'invariante, il sotto-array $A[p..r]$ contiene gli $r - p + 1$ elementi di $L$ e $R$ in ordine, escluse le sentinelle. Dunque la procedura `merge` è corretta.
+
 === Relazione di ricorrenza e complessità
 
 La relazione di ricorrenza del Merge Sort è:
@@ -330,6 +342,28 @@ Esistono quattro metodi principali per risolvere le relazioni di ricorrenza:
 + *Albero di ricorsione*: ausilio grafico che rappresenta i costi ai vari livelli della ricorsione; spesso usato per formulare un'ipotesi da verificare col metodo di sostituzione.
 + *Master Theorem*: formula chiusa applicabile alle relazioni bilanciate (vedi sezione successiva).
 
+#example(title: "Metodo di sostituzione: MergeSort")[
+  Il metodo di sostituzione consiste in due passi: (1) si *ipotizza* la forma della soluzione, (2) si usa l'*induzione matematica* per dimostrare che l'ipotesi è corretta e per trovare le costanti.
+
+  Consideriamo la ricorrenza $T(n) = 2T(n\/2) + n$. Ipotizziamo che $T(n) = O(n log n)$, cioè che esista una costante $c > 0$ tale che $T(n) <= c dot n dot log n$ per ogni $n >= n_0$.
+
+  *Passo induttivo:* supponiamo $T(n\/2) <= c dot (n\/2) dot log(n\/2)$ (ipotesi induttiva). Sostituendo nella ricorrenza:
+  $ T(n) &<= 2 dot c dot (n\/2) dot log(n\/2) + n \
+         &= c dot n dot log(n\/2) + n \
+         &= c dot n dot log n - c dot n dot log 2 + n \
+         &= c dot n dot log n - c dot n + n \
+         &<= c dot n dot log n $
+  dove l'ultima disuguaglianza vale per $c >= 1$.
+
+  *Caso base:* per $n = 1$ si ha $T(1) = Theta(1)$, e dobbiamo verificare $T(1) <= c dot 1 dot log 1 = 0$, che non è soddisfatta. Tuttavia, possiamo scegliere $n_0 = 2$ come caso base: la condizione al contorno non influisce sul comportamento asintotico, purché la costante $c$ sia sufficientemente grande. In particolare, basta scegliere $c >= T(2) \/ (2 dot log 2)$.
+
+  Si conclude che $T(n) = O(n log n)$.
+]
+
+#note(title: "Insidie del metodo di sostituzione")[
+  Il metodo di sostituzione richiede di ipotizzare la forma esatta della soluzione, e un'ipotesi troppo debole (per esempio $T(n) <= c dot n$) o un errore nel trattamento dei termini di ordine inferiore possono far fallire la dimostrazione. È fondamentale che l'ipotesi induttiva sia applicata _esattamente_ nella stessa forma in cui si vuole dimostrare il risultato.
+]
+
 #example(title: "Metodo iterativo: MergeSort")[
   Consideriamo la ricorrenza del MergeSort: $T(n) = 2T(n\/2) + n$ (con $T(1) = Theta(1)$).
 
@@ -344,6 +378,73 @@ Esistono quattro metodi principali per risolvere le relazioni di ricorrenza:
   $ T(n) = 2^(log_2 n) dot T(1) + n log_2 n = n dot Theta(1) + n log n = Theta(n log n) $
 
   Il risultato coincide con quello ottenuto tramite il Master Theorem.
+]
+
+#example(title: "Albero di ricorsione: ricorrenza non bilanciata")[
+  L'albero di ricorsione è particolarmente utile per formulare un'ipotesi sulla soluzione di ricorrenze per le quali il Master Theorem non è immediatamente applicabile, o per le quali si desidera una comprensione visiva del costo.
+
+  Consideriamo la ricorrenza $T(n) = 3T(n\/4) + c n^2$.
+
+  Si costruisce l'albero ponendo alla radice il costo $c n^2$. Ogni nodo genera 3 figli, ciascuno con un sotto-problema di dimensione $n\/4$:
+
+  #align(center, cetz.canvas({
+    import cetz.draw: *
+
+    // Livello 0: radice
+    circle((0, 0), radius: 0.45, fill: white, stroke: 0.5pt + black)
+    content((0, 0), text(size: 8pt)[$c n^2$])
+    content((4, 0), text(size: 8pt, fill: luma(80))[$c n^2$])
+
+    // Livello 1: 3 nodi
+    for (i, xpos) in ((-2.5, 0, 2.5)).enumerate() {
+      circle((xpos, -1.5), radius: 0.4, fill: white, stroke: 0.5pt + black)
+      content((xpos, -1.5), text(size: 7pt)[$c(n\/4)^2$])
+      line((0, -0.45), (xpos, -1.1), stroke: 0.5pt + luma(120))
+    }
+    content((4.5, -1.5), text(size: 8pt, fill: luma(80))[$(3\/16) c n^2$])
+
+    // Livello 2: 9 nodi (mostriamo 3 gruppi da 3 con punti)
+    let x2-offsets = (-3.5, -2.5, -1.5, -0.8, 0, 0.8, 1.5, 2.5, 3.5)
+    for (i, xpos) in x2-offsets.enumerate() {
+      circle((xpos, -3.0), radius: 0.3, fill: white, stroke: 0.5pt + black)
+      content((xpos, -3.0), text(size: 5pt)[$c(n\/16)^2$])
+      // archi dal livello 1
+      let parent-x = if i < 3 { -2.5 } else if i < 6 { 0 } else { 2.5 }
+      line((parent-x, -1.9), (xpos, -2.7), stroke: 0.4pt + luma(140))
+    }
+    content((4.5, -3.0), text(size: 8pt, fill: luma(80))[$(3\/16)^2 c n^2$])
+
+    // Punti verticali per livelli intermedi
+    for xpos in (-2.5, 0, 2.5) {
+      content((xpos, -4.0), text(size: 12pt, fill: luma(120))[$dots.v$])
+    }
+
+    // Foglie
+    content((0, -5.0), text(size: 8pt, fill: luma(80))[$n^(log_4 3)$ foglie, costo $Theta(1)$ ciascuna])
+
+    // Etichetta livelli
+    content((-5, 0), text(size: 7pt, fill: luma(100))[Liv. 0])
+    content((-5, -1.5), text(size: 7pt, fill: luma(100))[Liv. 1])
+    content((-5, -3.0), text(size: 7pt, fill: luma(100))[Liv. 2])
+    content((-5, -5.0), text(size: 7pt, fill: luma(100))[Liv. $log_4 n$])
+  }))
+
+  - *Livello 0* (radice): un nodo con costo $c n^2$. Costo totale: $c n^2$.
+  - *Livello 1*: 3 nodi, ciascuno con costo $c(n\/4)^2 = c n^2\/16$. Costo totale: $3 dot c n^2 \/ 16 = (3\/16) dot c n^2$.
+  - *Livello 2*: $3^2 = 9$ nodi, ciascuno con costo $c(n\/16)^2 = c n^2 \/ 256$. Costo totale: $9 dot c n^2 \/ 256 = (3\/16)^2 dot c n^2$.
+  - *Livello $i$*: $3^i$ nodi, ciascuno con costo $c(n\/4^i)^2$. Costo totale: $(3\/16)^i dot c n^2$.
+
+  L'albero ha $log_4 n$ livelli (i sotto-problemi raggiungono dimensione 1 quando $n\/4^i = 1$). Le foglie al livello $log_4 n$ sono $3^(log_4 n) = n^(log_4 3)$, ciascuna con costo $Theta(1)$.
+
+  Il costo totale è la somma su tutti i livelli:
+  $ T(n) = sum_(i=0)^(log_4 n - 1) (3\/16)^i dot c n^2 + Theta(n^(log_4 3)) $
+
+  Poiché $3\/16 < 1$, la serie geometrica converge:
+  $ sum_(i=0)^(infinity) (3\/16)^i = frac(1, 1 - 3\/16) = 16\/13 $
+
+  Dunque il costo dei nodi interni è limitato superiormente da $(16\/13) dot c n^2 = O(n^2)$. Poiché $log_4 3 approx 0.793 < 2$, il costo delle foglie $Theta(n^(log_4 3))$ è di ordine inferiore. Si ottiene $T(n) = Theta(n^2)$.
+
+  Questa ipotesi può essere verificata rigorosamente con il metodo di sostituzione, oppure confermata direttamente applicando il Master Theorem (Caso 3, con $a = 3$, $b = 4$, $f(n) = c n^2$, $c_("crit") = log_4 3 approx 0.793$).
 ]
 
 == Master Theorem

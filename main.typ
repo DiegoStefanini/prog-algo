@@ -1,113 +1,122 @@
-// ========================================
-// Programmazione ed Algoritmica
-// ========================================
+// ============================================================
+// PROGRAMMAZIONE ED ALGORITMICA - DISPENSE COMPLETE
+// ============================================================
 
 #import "template.typ": *
 
-#set document(
-  title: "Programmazione ed Algoritmica",
-  author: "Diego Stefanini",
-)
+#show: conf
 
-#set page(
-  paper: "a4",
-  margin: (top: 2.5cm, bottom: 2.5cm, left: 2.5cm, right: 2.5cm),
-  header: context {
-    if counter(page).get().first() > 1 [
-      #set text(size: 9pt, style: "italic")
-      Programmazione ed Algoritmica #h(1fr) A.A. 2025-2026
-      #v(-3pt)
-      #line(length: 100%, stroke: 0.4pt)
-    ]
-  },
-  footer: context {
-    set text(size: 9pt)
-    h(1fr)
-    counter(page).display("1")
-    h(1fr)
-  },
-)
+// ============================================================
+// COPERTINA
+// ============================================================
+#set page(numbering: none)
 
-#set text(font: "New Computer Modern", size: 11pt, lang: "it")
-#set par(justify: true, leading: 0.65em)
-#set heading(numbering: "1.1")
+#v(2cm)
 
-// Stile heading livello 1 (capitoli)
-#show heading.where(level: 1): it => {
-  pagebreak(weak: true)
-  reset-counters()
-  v(0.5em)
-  text(size: 16pt, weight: "bold")[#it]
-  v(0.3em)
-}
+#align(center)[
+  #text(size: 14pt, tracking: 0.3em)[UNIVERSITÀ DI PISA]
 
-// Stile heading livello 2 (sezioni)
-#show heading.where(level: 2): it => {
-  v(0.8em)
-  it
-  v(0.3em)
-}
+  #v(0.3cm)
 
-// ========================================
-// Pagina titolo
-// ========================================
+  #text(size: 11pt)[Dipartimento di Informatica]
 
-#page(
-  margin: (top: 0cm, bottom: 0cm, left: 0cm, right: 0cm),
-  header: none,
-  footer: none,
-)[
-  #align(center)[
-    #v(6cm)
+  #v(0.2cm)
 
-    #text(size: 28pt, weight: "bold")[Programmazione ed Algoritmica]
+  #text(size: 11pt)[Corso di Laurea in Informatica]
+]
 
-    #v(0.8cm)
+#v(2cm)
 
-    #line(length: 30%, stroke: 1pt + luma(120))
+#align(center)[
+  #block(
+    width: 80%,
+    stroke: (y: 1pt + black),
+    inset: (y: 15pt),
+  )[
+    #set par(justify: false, leading: 0.5em)
+    #text(size: 28pt, weight: "bold")[Programmazione \ ed Algoritmica]
 
-    #v(0.8cm)
+    #v(0.5cm)
 
-    #text(size: 13pt, fill: luma(80))[
-      Appunti del corso di Laurea in Informatica
-    ]
-
-    #v(3cm)
-
-    #text(size: 13pt)[Diego Stefanini]
-
-    #v(0.3cm)
-
-    #text(size: 12pt, fill: luma(80))[cc. Davide Paolocchi]
-
-    #v(1.5cm)
-
-    #text(size: 11pt)[Anno Accademico 2025--2026]
-
-    #v(1fr)
-
-    #text(size: 10pt, fill: luma(120))[
-      Università degli Studi di Pisa
-    ]
-
-    #v(2cm)
+    #text(size: 14pt)[Dispense per il Corso di Laurea in Informatica]
   ]
 ]
 
-// ========================================
-// Indice
-// ========================================
+#v(2cm)
 
-#{
-  set text(size: 10pt)
-  set par(leading: 0.5em)
-
-  outline(
-    title: [#text(size: 14pt, weight: "bold")[Indice]],
-    indent: 1em,
-    depth: 2,
+#align(center)[
+  #grid(
+    columns: 2,
+    column-gutter: 3cm,
+    row-gutter: 0.8cm,
+    align: (right, left),
+    [#text(weight: "bold")[Docente:]], [Prof.ssa Anna Bernasconi],
+    [#text(weight: "bold")[Autore:]], [Diego Stefanini],
+    [#text(weight: "bold")[cc:]], [Davide Paolocchi],
   )
-}
+]
+
+#v(1fr)
+
+#align(center)[
+  #line(length: 30%, stroke: 0.5pt + gray)
+
+  #v(0.5cm)
+
+  #text(size: 11pt)[Anno Accademico 2025/2026]
+
+  #v(0.3cm)
+
+  #text(size: 9pt, fill: gray)[
+    Ultima revisione: #datetime.today().display("[day]/[month]/[year]")
+  ]
+]
+
+#v(1cm)
+
+// ============================================================
+// PREFAZIONE
+// ============================================================
+#pagebreak()
+#set page(numbering: "i")
+
+#align(center)[
+  #text(size: 16pt, weight: "bold")[Prefazione]
+]
+
+#v(0.5cm)
+
+Queste dispense raccolgono gli argomenti del corso di Programmazione ed Algoritmica. Il testo copre sia la parte algoritmica --- complessità, ordinamento, strutture dati --- sia la parte di linguaggi di programmazione --- grammatiche formali, semantica operazionale, sistemi di tipi. L'obiettivo è fornire un riferimento auto-consistente per lo studio autonomo.
+
+#v(0.3cm)
+
+*Struttura del testo.* I primi quattro capitoli trattano i fondamenti dei linguaggi di programmazione: dalla definizione formale della sintassi tramite grammatiche, alla semantica operazionale dei programmi, fino ai sistemi di tipi e alle funzioni ricorsive. I capitoli successivi sviluppano la parte algoritmica: complessità computazionale, tecniche di progettazione (divide et impera), algoritmi di ordinamento e strutture dati fondamentali.
+
+#v(0.3cm)
+
+*Convenzioni tipografiche.* I *termini definiti per la prima volta* sono indicati in grassetto all'interno delle definizioni. Gli _enunciati di teoremi e proposizioni_ sono in corsivo. Le dimostrazioni si concludono con il simbolo $square.stroked$. Lo pseudocodice è presentato nella sintassi del linguaggio MAO, con `=` per le dichiarazioni e `:=` per gli assegnamenti.
+
+// ============================================================
+// INDICE
+// ============================================================
+#pagebreak()
+
+#v(2cm)
+#align(center)[
+  #line(length: 70%, stroke: 0.5pt + black)
+  #v(0.5cm)
+  #text(size: 22pt, weight: "bold")[Indice]
+  #v(0.5cm)
+]
+#v(0.5cm)
+#outline(title: none, indent: 1.5em, depth: 2)
+
+// ============================================================
+// CONTENUTO
+// ============================================================
+#pagebreak()
+#set page(numbering: "1")
+#counter(page).update(1)
 
 // ========================================
 // CAPITOLO 1 - INTRODUZIONE
@@ -180,3 +189,4 @@
 
 #include "algoritmica/strutture_dati.typ"
 #include "algoritmica/alberi_binari.typ"
+#include "algoritmica/tabelle_hash.typ"

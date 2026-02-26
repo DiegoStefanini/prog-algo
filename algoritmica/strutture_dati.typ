@@ -47,10 +47,12 @@ L'accesso diretto tramite indice e la contiguità in memoria sono le proprietà 
 #example(title: "Inserimento in un array")[
   Dato l'array $A = [3, 7, 12, 5, 9]$ con $n = 5$, inseriamo il valore $8$ in posizione $i = 3$:
 
-  + Spostiamo $A[5]$ in $A[6]$: $[3, 7, 12, 5, 9, 9]$ \
-  + Spostiamo $A[4]$ in $A[5]$: $[3, 7, 12, 5, 5, 9]$ \
-  + Spostiamo $A[3]$ in $A[4]$: $[3, 7, 12, 12, 5, 9]$ \
-  + Scriviamo $A[3] := 8$: $[3, 7, 8, 12, 5, 9]$
+  #array-viz((3, 7, 12, 5, 9), evidenzia: (3,), inizio: 1)
+
+  + Spostiamo $A[5]$ in $A[6]$: #array-viz((3, 7, 12, 5, 9, 9), evidenzia: (5, 6), inizio: 1)
+  + Spostiamo $A[4]$ in $A[5]$: #array-viz((3, 7, 12, 5, 5, 9), evidenzia: (4, 5), inizio: 1)
+  + Spostiamo $A[3]$ in $A[4]$: #array-viz((3, 7, 12, 12, 5, 9), evidenzia: (3, 4), inizio: 1)
+  + Scriviamo $A[3] := 8$: #array-viz((3, 7, 8, 12, 5, 9), evidenzia: (3,), inizio: 1)
 
   Sono stati necessari $n - i + 1 = 3$ spostamenti.
 ]
@@ -195,6 +197,34 @@ Una *sentinella* (o nodo fittizio) è un nodo speciale `L.nil` che non contiene 
 
 La sentinella trasforma la lista in una struttura circolare e *elimina tutti i casi limite* (lista vuota, inserimento/cancellazione in testa o in coda), semplificando notevolmente lo pseudocodice.
 
+#algorithm(title: "Ricerca con sentinella")[
+  ```
+  Node listSearch'(List L, int k){
+      Node x = L.nil.next;
+      while((x != L.nil) && (x.key != k)){
+          x := x.next;
+      }
+      return x;
+  }
+  ```
+]
+
+*Complessità:* $O(n)$ nel caso peggiore, come la versione senza sentinella. La differenza è che il ciclo testa `x != L.nil` invece di `x != NIL`.
+
+#algorithm(title: "Inserimento con sentinella")[
+  ```
+  // Con sentinella: nessun caso speciale necessario
+  listInsert'(List L, Node x){
+      x.next := L.nil.next;
+      L.nil.next.prev := x;
+      L.nil.next := x;
+      x.prev := L.nil;
+  }
+  ```
+]
+
+*Complessità:* $O(1)$. Non è necessario verificare se la lista è vuota, poiché la sentinella garantisce che `L.nil.next` esista sempre.
+
 #algorithm(title: "Cancellazione con sentinella")[
   ```
   // Con sentinella: nessun caso speciale necessario
@@ -206,7 +236,9 @@ La sentinella trasforma la lista in una struttura circolare e *elimina tutti i c
 ]
 
 #note(title: "Quando usare le sentinelle")[
-  Le sentinelle semplificano il codice ma non migliorano la complessità asintotica. Sono utili quando si hanno molte operazioni di inserimento e cancellazione e si vuole ridurre il numero di condizioni da verificare. Per pochi elementi, il nodo sentinella aggiuntivo rappresenta un overhead di memoria non trascurabile.
+  Le sentinelle raramente abbassano i limiti asintotici sui tempi delle operazioni, ma possono ridurre i *fattori costanti*. Il vantaggio principale è la *chiarezza del codice*: eliminando le condizioni al contorno, lo pseudocodice risulta più semplice e meno soggetto a errori. Sono utili quando si hanno molte operazioni di inserimento e cancellazione e si vuole ridurre il numero di condizioni da verificare.
+
+  Le sentinelle non dovrebbero essere utilizzate in modo indiscriminato. Se ci sono molte liste piccole, lo spazio extra in memoria utilizzato dalle sentinelle potrebbe costituire un notevole spreco. Si utilizzano le sentinelle soltanto se semplificano davvero il codice.
 ]
 
 ==== Confronto Array vs Liste
