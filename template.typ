@@ -1,6 +1,6 @@
 // ============================================================
 // TEMPLATE DISPENSE UNIVERSITARIE - PROGRAMMAZIONE ED ALGORITMICA
-// Stile con filetti laterali, small caps, note a margine
+// Stile con box colorati e filetti laterali
 // Numerazione unificata: Capitolo.Sezione.Numero
 // ============================================================
 
@@ -44,19 +44,48 @@
   set list(indent: 1em, body-indent: 0.5em)
   set enum(indent: 1em, body-indent: 0.5em)
 
-  // Capitoli: stile "CAPITOLO N" con linee sottili
+  // Code blocks con sfondo e syntax highlighting (non spezzabili tra pagine)
+  show raw.where(block: true): it => {
+    v(0.4em)
+    block(
+      width: 100%,
+      fill: rgb("#1e1e2e"),
+      inset: (x: 1.2em, y: 1em),
+      radius: 6pt,
+      breakable: false,
+    )[
+      #set text(size: 9.5pt, font: "Source Code Pro", fill: rgb("#cdd6f4"))
+      #set par(justify: false, leading: 0.6em)
+      #it
+    ]
+    v(0.4em)
+  }
+
+  // Code inline con sfondo
+  show raw.where(block: false): it => {
+    box(
+      fill: rgb("#e8edf4"),
+      inset: (x: 0.35em, y: 0.15em),
+      outset: (y: 0.15em),
+      radius: 3pt,
+    )[#text(size: 9.5pt, font: "Source Code Pro", fill: rgb("#1e1e2e"))[#it]]
+  }
+
+  show heading: set text(rgb("#003366"))
+
+  // Capitoli: stile "CAPITOLO N" con linee colorate
   show heading.where(level: 1): it => {
     contatore-blocco.update(0)
     pagebreak()
     v(2cm)
     align(center)[
-      #line(length: 60%, stroke: 0.4pt + black)
+      #line(length: 60%, stroke: 0.4pt + rgb("#003366"))
       #v(0.8cm)
-      #text(size: 11pt, tracking: 0.2em, fill: luma(80))[CAPITOLO #context counter(heading).display("1")]
+      #text(size: 11pt, tracking: 0.2em, fill: rgb("#003366"))[CAPITOLO #context counter(heading).display("1")]
       #v(0.4cm)
-      #text(size: 22pt, weight: "bold")[#it.body]
+      #text(size: 22pt, weight: "bold", fill: rgb("#003366"))[#it.body]
       #v(0.8cm)
-      #line(length: 60%, stroke: 0.4pt + black)
+      #line(length: 60%, stroke: 0.4pt + rgb("#003366"))
     ]
     v(1cm)
   }
@@ -102,85 +131,97 @@
 }
 
 // ============================================================
-// AMBIENTI TEORICI (con filetti laterali e small caps)
+// AMBIENTI TEORICI (box colorati con filetti laterali)
 // ============================================================
 
-// Definizione — filetto sinistro 2.5pt nero
+// Definizione — box blu
 #let definizione(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 2.5pt + black),
+    stroke: (left: 4pt + rgb("#003366")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#f4f7fb"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Definizione] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #corpo
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Teorema — filetto sinistro 2pt grigio scuro
+// Teorema — box viola
 #let teorema(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 2pt + luma(80)),
+    stroke: (left: 4pt + rgb("#5b2c6f")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#f8f4fc"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Teorema] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #emph(corpo)
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Lemma — filetto sinistro 2pt grigio scuro
+// Lemma — box viola chiaro
 #let lemma(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 2pt + luma(80)),
+    stroke: (left: 4pt + rgb("#7d3c98")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#faf5fe"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Lemma] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #emph(corpo)
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Corollario — filetto sinistro 2pt grigio scuro
+// Corollario — box viola chiaro
 #let corollario(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 2pt + luma(80)),
+    stroke: (left: 4pt + rgb("#7d3c98")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#faf5fe"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Corollario] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #emph(corpo)
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Proposizione — filetto sinistro 2pt grigio scuro
+// Proposizione — box viola chiaro
 #let proposizione(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 2pt + luma(80)),
+    stroke: (left: 4pt + rgb("#7d3c98")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#faf5fe"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Proposizione] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #emph(corpo)
   ]
-  v(0.5em)
+  v(1em)
 }
 
 // ============================================================
-// AMBIENTI DI SUPPORTO
+// AMBIENTI DI SUPPORTO (box colorati)
 // ============================================================
 
-// Dimostrazione — filetto sinistro tratteggiato, corpo 10pt
+// Dimostrazione — box tratteggiato grigio, corpo 10pt
 #let dimostrazione(corpo, stile: none) = {
-  v(0.6em)
-  block(
+  v(0.8em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.3em, bottom: 0.3em, right: 0.2em),
-    stroke: (left: stroke(thickness: 1pt, paint: luma(180), dash: "dashed")),
+    stroke: (left: 3pt + rgb("#95a5a6")),
+    inset: (x: 1.2em, y: 0.8em),
+    fill: rgb("#fafafa"),
+    radius: (right: 4pt),
   )[
     #set text(size: 10pt)
     #if stile != none {
@@ -191,41 +232,48 @@
     #[ ] #corpo
     #h(1fr) $square.stroked$
   ]
-  v(0.5em)
+  v(0.8em)
 }
 
-// Esempio — filetto sinistro grigio medio
+// Esempio — box arancione
 #let esempio(corpo, titolo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1.2em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 1.5pt + luma(150)),
+    stroke: (left: 4pt + rgb("#e67e22")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#fffaf5"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Esempio] #_prossimo-numero()#if titolo != none and titolo != "" [ (#titolo)].* #corpo
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Osservazione — indent leggero, nessun filetto
+// Osservazione — box grigio
 #let osservazione(corpo) = {
-  v(0.5em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 0.8em, top: 0.2em, bottom: 0.2em),
+    stroke: (left: 4pt + rgb("#7f8c8d")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#fdfdfd"),
+    radius: (right: 4pt),
   )[
     *#smallcaps[Osservazione] #_prossimo-numero().* #corpo
   ]
-  v(0.4em)
+  v(1em)
 }
 
-// Esercizio — filetto sinistro nero
+// Esercizio — box verde
 #let esercizio(corpo, tipo: none) = {
-  v(0.8em)
-  block(
+  v(1em)
+  rect(
     width: 100%,
-    inset: (left: 1em, top: 0.4em, bottom: 0.4em, right: 0.2em),
-    stroke: (left: 1.5pt + black),
+    stroke: (left: 4pt + rgb("#27ae60")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#f0faf4"),
+    radius: (right: 4pt),
   )[
     #if tipo != none {
       [*#smallcaps[Esercizio] #_prossimo-numero() — #tipo.*]
@@ -234,15 +282,18 @@
     }
     #[ ] #corpo
   ]
-  v(0.5em)
+  v(1em)
 }
 
-// Nota — indent leggero, nessun filetto
+// Nota — box azzurro chiaro
 #let nota(corpo, titolo: none) = {
-  v(0.4em)
-  block(
+  v(0.8em)
+  rect(
     width: 100%,
-    inset: (left: 0.8em, top: 0.2em, bottom: 0.2em),
+    stroke: (left: 3pt + rgb("#3498db")),
+    inset: (x: 1.2em, y: 0.8em),
+    fill: rgb("#f5faff"),
+    radius: (right: 4pt),
   )[
     #if titolo != none {
       [_*Nota (#titolo).*_]
@@ -251,31 +302,37 @@
     }
     #[ ] #corpo
   ]
-  v(0.3em)
+  v(0.8em)
 }
 
-// Attenzione — indent leggero, nessun filetto
+// Attenzione — box rosso
 #let attenzione(corpo) = {
-  v(0.4em)
-  block(
+  v(0.8em)
+  rect(
     width: 100%,
-    inset: (left: 0.8em, top: 0.2em, bottom: 0.2em),
+    stroke: (left: 4pt + rgb("#e74c3c")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#fdf2f2"),
+    radius: (right: 4pt),
   )[
     *Attenzione:* #corpo
   ]
-  v(0.3em)
+  v(0.8em)
 }
 
-// Da ricordare
+// Da ricordare — box teal
 #let ricorda(corpo) = {
-  v(0.5em)
-  block(
+  v(0.8em)
+  rect(
     width: 100%,
-    inset: (left: 0.8em, top: 0.2em, bottom: 0.2em),
+    stroke: (left: 4pt + rgb("#16a085")),
+    inset: (x: 1.2em, y: 1em),
+    fill: rgb("#f0faf8"),
+    radius: (right: 4pt),
   )[
     *Da ricordare.* #corpo
   ]
-  v(0.4em)
+  v(0.8em)
 }
 
 // ============================================================
