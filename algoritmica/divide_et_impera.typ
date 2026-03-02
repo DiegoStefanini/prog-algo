@@ -283,6 +283,95 @@ Per comprendere intuitivamente la complessità, si può analizzare l'*albero di 
   image("../images/chiamate_ricorsive_albero_ms.png", width: 30%),
 )
 
+#example(title: "Simulazione del Merge Sort")[
+  Simuliamo l'esecuzione di `mergeSort(A, 0, 7)` sull'array $A = [11, 7, 15, 19, 26, 9, 13, 6]$ con indici da 0 a $n-1 = 7$.
+
+  *1. Albero di ricorsione delle chiamate.* Ogni nodo rappresenta una chiamata `mergeSort(A, p, r)`. I numeri in rosso indicano l'ordine in cui avvengono le chiamate ricorsive (visita in profondità, figlio sinistro prima):
+
+  #align(center, cetz.canvas({
+    import cetz.draw: *
+
+    // Posizioni dei nodi
+    // Livello 0
+    let l0 = ((0, 0),)
+    // Livello 1
+    let l1 = ((-4.5, -1.8), (4.5, -1.8))
+    // Livello 2
+    let l2 = ((-6.5, -3.6), (-2.5, -3.6), (2.5, -3.6), (6.5, -3.6))
+    // Livello 3
+    let l3 = ((-7.5, -5.4), (-5.5, -5.4), (-3.5, -5.4), (-1.5, -5.4), (1.5, -5.4), (3.5, -5.4), (5.5, -5.4), (7.5, -5.4))
+
+    // Etichette dei nodi
+    let labels-l0 = ("MS(A,0,7)",)
+    let labels-l1 = ("MS(A,0,3)", "MS(A,4,7)")
+    let labels-l2 = ("MS(A,0,1)", "MS(A,2,3)", "MS(A,4,5)", "MS(A,6,7)")
+    let labels-l3 = ("MS(A,0,0)", "MS(A,1,1)", "MS(A,2,2)", "MS(A,3,3)", "MS(A,4,4)", "MS(A,5,5)", "MS(A,6,6)", "MS(A,7,7)")
+
+    // Numeri d'ordine (DFS pre-order, figlio sinistro prima)
+    let ord-l0 = ("1",)
+    let ord-l1 = ("2", "9")
+    let ord-l2 = ("3", "6", "10", "13")
+    let ord-l3 = ("4", "5", "7", "8", "11", "12", "14", "15")
+
+    // Disegna livello 0
+    for (i, pos) in l0.enumerate() {
+      circle(pos, radius: 0.65, fill: white, stroke: 0.6pt + black)
+      content(pos, text(size: 6.5pt)[#labels-l0.at(i)])
+      content((pos.at(0) + 0.55, pos.at(1) + 0.55), text(size: 6pt, fill: red, weight: "bold")[#ord-l0.at(i)])
+    }
+
+    // Disegna livello 1
+    for (i, pos) in l1.enumerate() {
+      circle(pos, radius: 0.6, fill: white, stroke: 0.6pt + black)
+      content(pos, text(size: 6.5pt)[#labels-l1.at(i)])
+      content((pos.at(0) + 0.5, pos.at(1) + 0.5), text(size: 6pt, fill: red, weight: "bold")[#ord-l1.at(i)])
+      line((l0.at(0).at(0), l0.at(0).at(1) - 0.65), (pos.at(0), pos.at(1) + 0.6), stroke: 0.5pt + luma(100))
+    }
+
+    // Disegna livello 2
+    for (i, pos) in l2.enumerate() {
+      circle(pos, radius: 0.6, fill: white, stroke: 0.6pt + black)
+      content(pos, text(size: 6.5pt)[#labels-l2.at(i)])
+      content((pos.at(0) + 0.5, pos.at(1) + 0.5), text(size: 6pt, fill: red, weight: "bold")[#ord-l2.at(i)])
+      let parent = if i < 2 { l1.at(0) } else { l1.at(1) }
+      line((parent.at(0), parent.at(1) - 0.6), (pos.at(0), pos.at(1) + 0.6), stroke: 0.5pt + luma(100))
+    }
+
+    // Disegna livello 3
+    for (i, pos) in l3.enumerate() {
+      circle(pos, radius: 0.6, fill: white, stroke: 0.6pt + black)
+      content(pos, text(size: 6pt)[#labels-l3.at(i)])
+      content((pos.at(0) + 0.5, pos.at(1) + 0.5), text(size: 6pt, fill: red, weight: "bold")[#ord-l3.at(i)])
+      let parent = l2.at(calc.floor(i / 2))
+      line((parent.at(0), parent.at(1) - 0.6), (pos.at(0), pos.at(1) + 0.6), stroke: 0.5pt + luma(100))
+    }
+  }))
+
+  L'albero ha $log_2 8 = 3$ livelli (più il livello delle foglie). Le chiamate con $p = r$ (indici uguali) sono i *casi base*: sotto-array di un solo elemento, già ordinati.
+
+  *2. Ordine delle chiamate.* L'esecuzione segue una visita in *profondità* (_depth-first_), esplorando prima il sotto-albero sinistro:
+  - Si scende completamente a sinistra: #text(fill: red)[\#1] $->$ #text(fill: red)[\#2] $->$ #text(fill: red)[\#3] $->$ #text(fill: red)[\#4] (caso base $[11]$), poi #text(fill: red)[\#5] (caso base $[7]$). Dopo le chiamate #text(fill: red)[\#4] e #text(fill: red)[\#5], si esegue `merge(A,0,0,1)` che fonde $[11]$ e $[7]$ ottenendo $[7, 11]$.
+  - Si risale ed esplora il fratello destro: #text(fill: red)[\#6] $->$ #text(fill: red)[\#7] (caso base $[15]$), #text(fill: red)[\#8] (caso base $[19]$). Poi `merge(A,2,2,3)` produce $[15, 19]$.
+  - Ritornati alla chiamata #text(fill: red)[\#2], si esegue `merge(A,0,1,3)` che fonde $[7, 11]$ e $[15, 19]$ ottenendo $[7, 11, 15, 19]$.
+  - Analogamente per il sotto-albero destro (chiamate #text(fill: red)[\#9]--#text(fill: red)[\#15]), producendo $[6, 9, 13, 26]$.
+  - Infine, `merge(A,0,3,7)` fonde le due metà ordinate: $[6, 7, 9, 11, 13, 15, 19, 26]$.
+
+  *3. Quando avvengono le operazioni di merge.* Le chiamate a `merge` avvengono al *ritorno* dalla ricorsione, cioè dopo che entrambi i sotto-array sono stati ordinati:
+
+  #align(center, table(
+    columns: (auto, auto, auto),
+    align: (center, center, center),
+    table.header[*Operazione*][*Fonde*][*Risultato*],
+    [`merge(A,0,0,1)`], [$[11] + [7]$], [$[7, 11]$],
+    [`merge(A,2,2,3)`], [$[15] + [19]$], [$[15, 19]$],
+    [`merge(A,0,1,3)`], [$[7,11] + [15,19]$], [$[7, 11, 15, 19]$],
+    [`merge(A,4,4,5)`], [$[26] + [9]$], [$[9, 26]$],
+    [`merge(A,6,6,7)`], [$[13] + [6]$], [$[6, 13]$],
+    [`merge(A,4,5,7)`], [$[9,26] + [6,13]$], [$[6, 9, 13, 26]$],
+    [`merge(A,0,3,7)`], [$[7,11,15,19] + [6,9,13,26]$], [$[6, 7, 9, 11, 13, 15, 19, 26]$],
+  ))
+]
+
 #theorem(title: "Complessità del Merge Sort")[
   La complessità in tempo del Merge Sort è $Theta(n log n)$ in *tutti i casi* (ottimo, medio, pessimo). La complessità in spazio è $O(n)$, dovuta agli array ausiliari utilizzati dalla procedura `merge`.
 ]
