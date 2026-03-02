@@ -254,24 +254,226 @@ La scelta di $m$ è cruciale per l'efficienza della funzione hash.
   - *Buona scelta*: un numero primo non troppo vicino a una potenza di 2. Ad esempio, per memorizzare circa 2000 stringhe e tollerare in media 3 confronti per ricerca, si sceglie $m approx 2000 / 3 approx 701$. Il numero 701 è primo e non è vicino a nessuna potenza di 2, quindi è una buona scelta.
 ]
 
-=== Confronto tra realizzazioni di dizionario
+=== Indirizzamento aperto
 
-Per concludere, confrontiamo le tre realizzazioni di dizionario studiate.
+Nell'*indirizzamento aperto* (o _open addressing_) tutti gli elementi sono memorizzati direttamente nella tavola $T$, senza liste esterne. Ogni cella contiene al più un elemento: se si verifica una collisione, si cercano celle alternative all'interno della tavola stessa.
 
-#align(center)[
-  #table(
-    columns: (auto, auto, auto, auto),
-    align: (center, center, center, center),
-    [*Operazione*], [*Indirizzamento diretto*], [*Tavola hash (medio)*], [*ABR (caso peggiore)*],
-    [Search], [$O(1)$], [$O(1 + alpha)$], [$O(h)$],
-    [Insert], [$O(1)$], [$O(1)$], [$O(h)$],
-    [Delete], [$O(1)$], [$O(1)$], [$O(h)$],
-    [Min/Max], [$O(m)$], [---], [$O(h)$],
-    [Succ/Pred], [$O(m)$], [---], [$O(h)$],
-    [Spazio], [$O(|U|)$], [$O(m + n)$], [$O(n)$],
-  )
+#definizione(titolo: "Indirizzamento aperto")[
+  Nell'*indirizzamento aperto*, la tavola hash $T[0 .. m - 1]$ contiene direttamente le chiavi (oppure NIL per le celle vuote). Il fattore di carico soddisfa sempre $alpha = n / m <= 1$. Quando si deve inserire una chiave $k$ e la cella $h(k)$ è già occupata, si esaminano altre celle secondo una *sequenza di ispezione* determinata dalla chiave.
+]
+
+==== Sequenza di ispezione
+
+Per gestire le collisioni, si associa a ogni chiave $k$ una sequenza di posizioni da esaminare.
+
+#definizione(titolo: "Sequenza di ispezione")[
+  Una funzione di ispezione è una funzione $h : U times {0, 1, ..., m-1} arrow.r {0, 1, ..., m-1}$ tale che per ogni chiave $k$, la sequenza $chevron.l h(k, 0), h(k, 1), ..., h(k, m-1) chevron.r$ sia una permutazione di ${0, 1, ..., m-1}$. In questo modo, ogni cella della tavola viene esaminata esattamente una volta.
+]
+
+==== Operazioni di dizionario
+
+Nell'indirizzamento aperto, le operazioni di dizionario esaminano le celle nell'ordine dettato dalla sequenza di ispezione. Consideriamo prima il caso senza cancellazioni: ogni cella di $T$ contiene una chiave oppure NIL (cella vuota).
+
+#algoritmo(titolo: "Insert (senza cancellazioni)")[
+  Insert(T, k)
+      i := 0;
+      while (i < m) {
+          j := h(k, i);
+          if (T[j] == NIL) {
+              T[j] := k;
+              return j;
+          }
+          else i := i + 1;
+      }
+      error "overflow della tabella"
+]
+
+#algoritmo(titolo: "Search (senza cancellazioni)")[
+  Search(T, k)
+      i := 0;
+      while (i < m) {
+          j := h(k, i);
+          if (T[j] == k) return j;    // chiave trovata
+          if (T[j] == NIL) return -1;  // chiave assente
+          i := i + 1;
+      }
+      return -1;    // chiave assente, tabella piena
 ]
 
 #osservazione[
-  Le tavole hash offrono il miglior tempo medio per le operazioni fondamentali (Search, Insert, Delete), ma non supportano efficientemente le operazioni di Minimum, Maximum, Successor e Predecessor. Per queste operazioni, gli ABR rimangono la scelta migliore. La tavola a indirizzamento diretto è praticabile solo quando l'universo delle chiavi è piccolo.
+  La Search si ferma quando trova la chiave cercata oppure quando incontra una cella vuota (NIL). L'idea chiave è: se la cella è vuota, l'algoritmo di Insert avrebbe inserito la chiave $k$ proprio in quella cella (se fosse stata presente), quindi $k$ non può trovarsi oltre.
+]
+
+==== Cancellazione con flag DELETED
+
+La cancellazione nell'indirizzamento aperto non può semplicemente porre NIL nella cella, perché ciò interromperebbe le sequenze di ispezione delle chiavi inserite successivamente.
+
+#definizione(titolo: "Cancellazione logica")[
+  La cancellazione avviene in modo *logico*: la cella dell'elemento cancellato viene marcata con un valore speciale *DELETED* (diverso da NIL e da qualsiasi chiave). Una cella DELETED:
+  - nella *Insert* viene trattata come libera (vi si può inserire una nuova chiave);
+  - nella *Search* viene trattata come occupata (la ricerca prosegue oltre).
+]
+
+#algoritmo(titolo: "Insert (con cancellazioni)")[
+  Insert(T, k)
+      i := 0;
+      while (i < m) {
+          j := h(k, i);
+          if (T[j] == NIL or T[j] == DELETED) {
+              T[j] := k;
+              return j;
+          }
+          else i := i + 1;
+      }
+      error "overflow della tabella"
+]
+
+#osservazione[
+  L'algoritmo di Search non cambia: le celle DELETED vengono semplicemente "scavalcate" durante la ricerca, come se fossero occupate da una chiave diversa da quella cercata. Tuttavia, l'uso di DELETED degrada le prestazioni della ricerca, perché il tempo non dipende più solo dal fattore di carico $alpha$ ma anche dal numero di celle marcate DELETED.
+]
+
+==== Analisi della complessità
+
+L'analisi al caso medio richiede tre ipotesi:
+
++ $alpha < 1$ (la tavola non è completamente piena);
++ non ci sono cancellazioni;
++ vale l'ipotesi di *hashing uniforme*:
+
+#definizione(titolo: "Hashing uniforme")[
+  L'ipotesi di *hashing uniforme* richiede che, per ogni chiave $k$, ognuna delle $m!$ permutazioni di ${0, 1, ..., m - 1}$ sia equiprobabile come sequenza di ispezione di $k$. Questa è un'ipotesi più forte dell'hashing uniforme semplice (che riguarda solo la prima posizione).
+]
+
+*Caso ottimo:* $T(n, m) = O(1)$ --- la prima ispezione trova la cella vuota o la chiave cercata.
+
+*Caso pessimo:* $T(n, m) = Theta(n)$ --- tutte le chiavi collidono, si esamina l'intera tavola.
+
+*Caso medio:* l'analisi si differenzia per ricerca senza successo e con successo.
+
+#teorema(titolo: "Ricerca senza successo")[
+  Nelle ipotesi (1), (2), (3) sopra, il numero atteso di ispezioni in una ricerca senza successo è al più $ frac(1, 1 - alpha) $.
+]
+
+#dimostrazione[
+  Calcoliamo la probabilità di eseguire almeno $i$ ispezioni:
+  - Probabilità di almeno 1 ispezione: 1 (si esamina sempre la prima cella).
+  - Probabilità di almeno 2 ispezioni (la prima cella è occupata): $n / m = alpha$.
+  - Probabilità di almeno 3 ispezioni (le prime due occupate): $frac(n, m) dot frac(n-1, m-1) < alpha^2$.
+  - In generale, la probabilità di almeno $i + 1$ ispezioni è al più $alpha^i$.
+
+  Il numero atteso di ispezioni è:
+  $ sum_(i=0)^(infinity) alpha^i = frac(1, 1 - alpha) $
+
+  dove si usa la convergenza della serie geometrica per $alpha < 1$.
+]
+
+#teorema(titolo: "Ricerca con successo")[
+  Nelle ipotesi (1), (2), (3) sopra, il numero atteso di ispezioni in una ricerca con successo è al più $ frac(1, alpha) ln frac(1, 1 - alpha) $.
+]
+
+#dimostrazione[
+  La ricerca di una chiave $k$ presente nella tavola percorre le stesse posizioni esaminate quando $k$ è stata inserita. Se $k$ è stata la $(i+1)$-esima chiave inserita, al momento dell'inserimento il fattore di carico era $i/m$, e il numero atteso di ispezioni era al più $frac(1, 1 - i slash m) = frac(m, m - i)$.
+
+  Il numero atteso di ispezioni, mediato su tutte le $n$ chiavi presenti:
+  $ frac(1, n) sum_(i=0)^(n-1) frac(m, m - i) = frac(m, n) sum_(i=0)^(n-1) frac(1, m - i) < frac(1, alpha) ln frac(1, 1 - alpha) $
+
+  dove l'ultimo passaggio segue dall'approssimazione della somma con un integrale.
+]
+
+#teorema(titolo: "Inserimento")[
+  Nelle ipotesi (1), (2), (3), il numero atteso di ispezioni per un inserimento è al più $frac(1, 1 - alpha)$, lo stesso della ricerca senza successo.
+]
+
+#dimostrazione[
+  L'inserimento di una chiave $k$ esamina le stesse celle che esaminerebbe una ricerca senza successo di $k$ (cercando la prima cella vuota).
+]
+
+#esempio(titolo: "Prestazioni al variare di $alpha$")[
+  La tabella mostra il numero atteso di ispezioni per vari valori di $alpha$:
+
+  #align(center)[
+    #table(
+      columns: (auto, auto, auto, auto),
+      align: (center, center, center, center),
+      [$alpha$], [Occupazione], [Ricerca senza successo ($frac(1, 1-alpha)$)], [Ricerca con successo ($frac(1, alpha) ln frac(1, 1-alpha)$)],
+      [$1 slash 10$], [10%], [1.11], [1.05],
+      [$1 slash 2$], [50%], [2], [1.38],
+      [$9 slash 10$], [90%], [10], [2.55],
+    )
+  ]
+
+  Con una tavola piena al 50% ($alpha = 1/2$), una ricerca senza successo esamina in media solo 2 celle: prestazioni eccellenti.
+]
+
+==== Scansione lineare
+
+Il metodo più semplice per calcolare la sequenza di ispezione è la *scansione lineare* (o _linear probing_).
+
+#definizione(titolo: "Scansione lineare")[
+  Nella *scansione lineare*, data una funzione hash ausiliaria $h' : U arrow.r {0, 1, ..., m-1}$, la funzione di ispezione è:
+
+  $ h(k, i) = (h'(k) + i) mod m $
+
+  La sequenza di ispezione parte dalla posizione $h'(k)$ e procede ciclicamente: $chevron.l h'(k), h'(k) + 1, h'(k) + 2, ..., 0, 1, ..., h'(k) - 1 chevron.r$.
+]
+
+#esempio(titolo: "Scansione lineare")[
+  Con $m = 7$ e $h'(k) = k mod 7$, la sequenza di ispezione per la chiave $k = 9$ è:
+  - $h'(9) = 9 mod 7 = 2$
+  - Sequenza: $chevron.l 2, 3, 4, 5, 6, 0, 1 chevron.r$
+
+  Il punto di partenza dipende dalla chiave (tramite $h'(k)$), ma il passo di scansione è costante ($+1$).
+]
+
+#osservazione[
+  La scansione lineare è semplice da implementare ma soffre di *clustering primario*: le chiavi che collidono tendono a formare blocchi contigui di celle occupate, aumentando il tempo di ricerca. Metodi più sofisticati come la *scansione quadratica* e il *doppio hash* riducono questo fenomeno.
+]
+
+==== Doppio hash
+
+Il doppio hash è la tecnica più efficace per l'indirizzamento aperto, in quanto produce sequenze di ispezione che approssimano meglio l'hashing uniforme.
+
+#definizione(titolo: "Doppio hash")[
+  Nel *doppio hash*, date due funzioni hash ausiliarie $h_1$ e $h_2$, la funzione di ispezione è:
+
+  $ h(k, i) = (h_1(k) + i dot h_2(k)) mod m $
+
+  Sia il punto di partenza ($h_1(k)$) sia il passo ($h_2(k)$) dipendono dalla chiave. Si richiede che $h_2(k)$ sia coprimo con $m$ per garantire che la sequenza sia una permutazione completa.
+]
+
+#nota(titolo: "Scelta tipica per il doppio hash")[
+  Una scelta comune è $m$ primo con $h_1(k) = k mod m$ e $h_2(k) = 1 + (k mod (m-1))$. Il valore $h_2(k)$ è sempre compreso tra 1 e $m-1$ ed è automaticamente coprimo con $m$ (poiché $m$ è primo).
+]
+
+#esempio(titolo: "Doppio hash")[
+  Con $m = 13$, $h_1(k) = k mod 13$ e $h_2(k) = 1 + (k mod 12)$, inseriamo le chiavi 10, 24, 33:
+  - $k = 10$: $h_1(10) = 10$, cella 10 libera $arrow.r$ inserito in posizione 10.
+  - $k = 24$: $h_1(24) = 11$, cella 11 libera $arrow.r$ inserito in posizione 11.
+  - $k = 33$: $h_1(33) = 7$, cella 7 libera $arrow.r$ inserito in posizione 7.
+  - $k = 27$: $h_1(27) = 1$, cella 1 libera $arrow.r$ inserito in posizione 1.
+  - $k = 14$: $h_1(14) = 1$, collisione! $h_2(14) = 1 + 14 mod 12 = 3$. Provo $h(14,1) = (1 + 3) mod 13 = 4$, cella 4 libera $arrow.r$ inserito in posizione 4.
+]
+
+=== Confronto tra realizzazioni di dizionario
+
+Per concludere, confrontiamo le quattro realizzazioni di dizionario studiate.
+
+#align(center)[
+  #table(
+    columns: (auto, auto, auto, auto, auto),
+    align: (center, center, center, center, center),
+    [*Operazione*], [*Indir. diretto*], [*Hash + concat. (medio)*], [*Hash aperto (medio)*], [*ABR (peggiore)*],
+    [Search], [$O(1)$], [$O(1 + alpha)$], [$O(frac(1, 1 - alpha))$], [$O(h)$],
+    [Insert], [$O(1)$], [$O(1)$], [$O(frac(1, 1 - alpha))$], [$O(h)$],
+    [Delete], [$O(1)$], [$O(1)$], [$O(frac(1, 1 - alpha))$#super[\*]], [$O(h)$],
+    [Min/Max], [$O(m)$], [---], [---], [$O(h)$],
+    [Succ/Pred], [$O(m)$], [---], [---], [$O(h)$],
+    [Spazio], [$O(|U|)$], [$O(m + n)$], [$O(m)$], [$O(n)$],
+  )
+]
+
+#super[\*] Con flag DELETED; degrada con molte cancellazioni.
+
+#osservazione[
+  Le tavole hash offrono il miglior tempo medio per le operazioni fondamentali (Search, Insert, Delete), ma non supportano efficientemente le operazioni di Minimum, Maximum, Successor e Predecessor. L'indirizzamento aperto ha il vantaggio di non usare puntatori (migliore uso della cache), ma richiede $alpha < 1$ e la cancellazione è problematica. Il concatenamento è più flessibile ($alpha$ può superare 1) e gestisce le cancellazioni in modo naturale. La tavola a indirizzamento diretto è praticabile solo quando l'universo delle chiavi è piccolo.
 ]
