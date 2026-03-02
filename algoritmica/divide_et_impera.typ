@@ -380,7 +380,22 @@ Esistono quattro metodi principali per risolvere le relazioni di ricorrenza:
   Il risultato coincide con quello ottenuto tramite il Master Theorem.
 ]
 
-#example(title: "Albero di ricorsione: ricorrenza non bilanciata")[
+=== Metodo dell'albero di ricorsione
+
+In un *albero di ricorsione* ogni nodo rappresenta il costo di un singolo sotto-problema nell'insieme delle chiamate ricorsive di funzione. Sommiamo i costi all'interno di ogni livello dell'albero per ottenere un insieme di costi per livello; poi sommiamo tutti i costi per livello per determinare il costo totale di tutti i livelli della ricorsione.
+
+L'albero di ricorsione è particolarmente efficace in due situazioni:
++ quando si desidera una comprensione *visiva* della distribuzione del costo tra i livelli della ricorsione;
++ quando la ricorrenza non è nella forma standard $T(n) = a T(n\/b) + f(n)$ e il Master Theorem non è applicabile (ad esempio ricorrenze con sotto-problemi di dimensioni diverse).
+
+Il metodo si articola in tre passi:
++ *Costruire l'albero*: la radice contiene il costo della forzante $f(n)$; ogni nodo genera tanti figli quante sono le chiamate ricorsive, ciascuno col costo del sotto-problema corrispondente.
++ *Sommare per livello*: si calcola il costo totale di ogni livello dell'albero.
++ *Sommare i livelli*: si sommano i costi di tutti i livelli, ottenendo una formula (spesso una serie geometrica) che fornisce un'ipotesi per $T(n)$.
+
+L'ipotesi ottenuta dall'albero di ricorsione può essere usata direttamente come soluzione (quando i calcoli sono esatti), oppure può essere verificata rigorosamente col metodo di sostituzione.
+
+#example(title: "Albero di ricorsione: ricorrenza bilanciata")[
   L'albero di ricorsione è particolarmente utile per formulare un'ipotesi sulla soluzione di ricorrenze per le quali il Master Theorem non è immediatamente applicabile, o per le quali si desidera una comprensione visiva del costo.
 
   Consideriamo la ricorrenza $T(n) = 3T(n\/4) + c n^2$.
@@ -445,6 +460,77 @@ Esistono quattro metodi principali per risolvere le relazioni di ricorrenza:
   Dunque il costo dei nodi interni è limitato superiormente da $(16\/13) dot c n^2 = O(n^2)$. Poiché $log_4 3 approx 0.793 < 2$, il costo delle foglie $Theta(n^(log_4 3))$ è di ordine inferiore. Si ottiene $T(n) = Theta(n^2)$.
 
   Questa ipotesi può essere verificata rigorosamente con il metodo di sostituzione, oppure confermata direttamente applicando il Master Theorem (Caso 3, con $a = 3$, $b = 4$, $f(n) = c n^2$, $c_("crit") = log_4 3 approx 0.793$).
+]
+
+#example(title: "Albero di ricorsione: ricorrenza con sotto-problemi di dimensioni diverse")[
+  Consideriamo la ricorrenza $T(n) = T(n\/3) + T(2n\/3) + c n$, dove $c > 0$ è una costante. Questa ricorrenza *non* ha la forma standard $a T(n\/b) + f(n)$ perché i due sotto-problemi hanno dimensioni diverse ($n\/3$ e $2n\/3$), quindi il Master Theorem non è direttamente applicabile. L'albero di ricorsione è lo strumento ideale.
+
+  Costruiamo l'albero. La radice ha costo $c n$. Il figlio sinistro ha costo $c(n\/3)$ e il figlio destro ha costo $c(2n\/3)$:
+
+  #align(center, cetz.canvas({
+    import cetz.draw: *
+
+    // Livello 0: radice
+    circle((0, 0), radius: 0.5, fill: white, stroke: 0.5pt + black)
+    content((0, 0), text(size: 8pt)[$c n$])
+    content((5, 0), text(size: 8pt, fill: luma(80))[$c n$])
+
+    // Livello 1: 2 nodi
+    circle((-2.5, -1.5), radius: 0.45, fill: white, stroke: 0.5pt + black)
+    content((-2.5, -1.5), text(size: 7pt)[$c(n\/3)$])
+    circle((2.5, -1.5), radius: 0.45, fill: white, stroke: 0.5pt + black)
+    content((2.5, -1.5), text(size: 7pt)[$c(2n\/3)$])
+    line((0, -0.5), (-2.5, -1.05), stroke: 0.5pt + luma(120))
+    line((0, -0.5), (2.5, -1.05), stroke: 0.5pt + luma(120))
+    content((5.5, -1.5), text(size: 8pt, fill: luma(80))[$c n$])
+
+    // Livello 2: 4 nodi
+    let l2-data = ((-4, $c(n\/9)$), (-1.5, $c(2n\/9)$), (1, $c(2n\/9)$), (4, $c(4n\/9)$))
+    for (xpos, label) in l2-data {
+      circle((xpos, -3.0), radius: 0.4, fill: white, stroke: 0.5pt + black)
+      content((xpos, -3.0), text(size: 6pt)[#label])
+    }
+    line((-2.5, -1.95), (-4, -2.6), stroke: 0.4pt + luma(140))
+    line((-2.5, -1.95), (-1.5, -2.6), stroke: 0.4pt + luma(140))
+    line((2.5, -1.95), (1, -2.6), stroke: 0.4pt + luma(140))
+    line((2.5, -1.95), (4, -2.6), stroke: 0.4pt + luma(140))
+    content((5.5, -3.0), text(size: 8pt, fill: luma(80))[$c n$])
+
+    // Punti verticali
+    for xpos in (-2.5, 2.5) {
+      content((xpos, -4.0), text(size: 12pt, fill: luma(120))[$dots.v$])
+    }
+
+    // Altezza
+    content((-5.5, -1.5), text(size: 7pt, fill: luma(100))[$log_(3\/2) n$])
+
+    // Totale
+    content((5.5, -4.5), text(size: 8pt, fill: luma(80))[Totale: $O(n log n)$])
+  }))
+
+  *Analisi per livello.* Al livello 0 il costo è $c n$. Al livello 1 il costo è $c(n\/3) + c(2n\/3) = c n$. Al livello 2, sommando i quattro nodi: $c(n\/9) + c(2n\/9) + c(2n\/9) + c(4n\/9) = c n$. Ogni livello contribuisce esattamente $c n$ al costo totale.
+
+  *Altezza dell'albero.* Il cammino più lungo dalla radice a una foglia è quello che segue sempre il figlio destro (sotto-problema di dimensione $2n\/3$): $n -> (2\/3)n -> (2\/3)^2 n -> dots.c -> 1$. Poiché $(2\/3)^k n = 1$ quando $k = log_(3\/2) n$, l'altezza dell'albero è $log_(3\/2) n$.
+
+  Non tutti i livelli dell'albero contribuiscono con costo esattamente $c n$: i livelli più bassi hanno meno nodi, poiché il ramo sinistro ($n\/3$) raggiunge le foglie prima del ramo destro ($2n\/3$). Tuttavia, poiché il costo per livello è *al più* $c n$ e ci sono $log_(3\/2) n$ livelli, possiamo concludere:
+  $ T(n) = O(n log_(3\/2) n) = O(n log n) $
+  dove l'ultimo passaggio segue dal fatto che $log_(3\/2) n = (log n) \/ (log 3\/2) = Theta(log n)$.
+
+  *Verifica con il metodo di sostituzione.* Dimostriamo che $T(n) <= d n log n$ per un'opportuna costante $d > 0$. Per $d >= c \/ (log 3 - 2\/3)$, si ha:
+  $ T(n) &<= T(n\/3) + T(2n\/3) + c n \
+         &<= d(n\/3) log(n\/3) + d(2n\/3) log(2n\/3) + c n \
+         &= d(n\/3)(log n - log 3) + d(2n\/3)(log n - log(3\/2)) + c n \
+         &= d n log n - d n (1\/3 dot log 3 + 2\/3 dot log(3\/2)) + c n \
+         &<= d n log n $
+  dove l'ultima disuguaglianza vale scegliendo $d$ sufficientemente grande affinché $d(1\/3 dot log 3 + 2\/3 dot log(3\/2)) >= c$, che è sempre possibile poiché la quantità tra parentesi è una costante positiva.
+]
+
+#note(title: "Quando usare l'albero di ricorsione")[
+  L'albero di ricorsione è il metodo di elezione quando:
+  - i sotto-problemi hanno *dimensioni diverse* (es. $T(n) = T(n\/3) + T(2n\/3) + c n$), rendendo inapplicabile il Master Theorem;
+  - si desidera *intuire* la soluzione prima di dimostrarla formalmente;
+  - si vuole capire *quale parte domina* il costo: le foglie (ricorsione pesante) o la radice (forzante pesante).
+  Per ricorrenze bilanciate nella forma $T(n) = a T(n\/b) + f(n)$, il Master Theorem è più rapido e diretto.
 ]
 
 == Master Theorem
