@@ -454,3 +454,129 @@ $ L(n) = ("numero minimo di ripetizioni dell'evento") times ("costo per evento")
 
   Poiché il Merge Sort ha complessità $Theta(n log n)$, esso è un algoritmo *ottimo* per l'ordinamento basato su confronti.
 ]
+
+== Problem solving: ricerca del punto di transizione
+
+In molti problemi su array, la struttura dell'input presenta una *proprietà* che vale fino a un certo indice $i'$ e poi cambia. Questo schema ricorrente richiede due tipi di algoritmi:
+
++ *Verifica*: controllare che l'array soddisfi effettivamente la proprietà. Questo richiede tipicamente una scansione lineare $O(n)$.
++ *Ricerca del punto di transizione $i'$*: individuare l'indice in cui la proprietà cambia. Poiché la proprietà è *monotona* (vale per gli indici $< i'$ e non vale per gli indici $>= i'$), si può usare una ricerca binaria adattata $O(log n)$.
+
+Entrambi gli algoritmi ammettono prove di *ottimalità* che sfruttano i criteri di limite inferiore.
+
+=== Pattern generale
+
+Sia $A[0..n-1]$ un array e sia $P$ una proprietà strutturale che vale per le prime posizioni e poi cambia. Formalmente, esiste un indice $i'$ $(0 <= i' <= n-1)$ tale che:
+- per $0 <= j < i'$, la coppia $(A[j], A[j+1])$ soddisfa un certo predicato $phi$;
+- da $A[i']$ in poi, vale una condizione diversa (ad esempio, tutti gli elementi hanno lo stesso segno, la stessa parità, ecc.).
+
+*Verifica.* Per verificare che un array soddisfi questa proprietà, occorre:
++ trovare il punto $i'$ in cui il predicato $phi$ smette di valere;
++ controllare che da $i'$ in poi valga la seconda condizione.
+
+*Ricerca.* Per trovare $i'$ (assumendo che l'array soddisfi la proprietà), si osserva che il predicato definisce una partizione dell'array in due regioni contigue: la regione in cui $phi$ vale e quella in cui non vale. Si tratta di trovare il *punto di transizione* di un predicato monotono --- lo stesso schema della ricerca binaria.
+
+=== Verifica in tempo lineare
+
+#algorithm(title: "Verifica proprietà di alternanza")[
+  ```
+  // Verifica che A alterni una proprietà P tra coppie consecutive
+  // fino a un indice i', poi mantenga P costante.
+  // prop(x) restituisce la proprietà dell'elemento (es. segno, parità)
+  Verifica(A[0..n-1]):
+      n = length(A)
+      if n == 1:
+          return true
+      j = 0
+      // Fase 1: trova dove smette di alternare
+      while j <= n-2 and prop(A[j]) != prop(A[j+1]):
+          j := j + 1
+      if j >= n-1:
+          return true            // alterna fino alla fine, i' = n-1
+      // Fase 2: verifica che da j+1 in poi sia costante
+      s = prop(A[j+1])
+      t = j + 1
+      while t <= n-1:
+          if prop(A[t]) != s:
+              return false
+          t := t + 1
+      return true
+  ```
+]
+
+La complessità è $Theta(n)$ nel caso pessimo: l'algoritmo visita ogni elemento al più una volta.
+
+#theorem(title: "Ottimalità della verifica")[
+  La verifica di una proprietà strutturale su un array richiede $Omega(n)$ nel caso pessimo.
+]
+
+#demonstration[
+  Si usa il *criterio della dimensione dell'input* (o _fooling argument_): un avversario può costruire due istanze che differiscono solo nell'ultimo elemento --- una che soddisfa la proprietà e una che non la soddisfa. Qualsiasi algoritmo che non esamina l'ultimo elemento non può distinguerle. Dunque ogni algoritmo corretto deve ispezionare $Omega(n)$ elementi nel caso pessimo.
+]
+
+=== Ricerca del punto di transizione in tempo logaritmico
+
+Se *assumiamo* che l'array soddisfi la proprietà, la ricerca di $i'$ diventa una ricerca binaria sul predicato monotono: "la coppia $(A[q], A[q+1])$ ha la stessa proprietà?"
+
+#algorithm(title: "Ricerca del punto di transizione")[
+  ```
+  // Trova i' assumendo che A soddisfi la proprietà.
+  // prop(x) restituisce la proprietà dell'elemento
+  Transizione(A, p, r):
+      if p == r:
+          return p
+      q = (p + r) / 2
+      if prop(A[q]) == prop(A[q+1]):
+          // q e q+1 nella zona costante => i' è a sinistra
+          return Transizione(A, p, q)
+      else:
+          // q e q+1 ancora alternano => i' è a destra
+          return Transizione(A, q+1, r)
+  ```
+]
+
+La chiamata iniziale è `Transizione(A, 0, n-1)`.
+
+La ricorrenza associata è $T(n) = T(n\/2) + Theta(1)$, da cui $T(n) = Theta(log n)$, come nella ricerca binaria classica.
+
+#theorem(title: "Ottimalità della ricerca del punto di transizione")[
+  La ricerca del punto di transizione di un predicato monotono su $n$ posizioni richiede $Omega(log n)$ confronti nel caso pessimo.
+]
+
+#demonstration[
+  Si applica il *criterio dell'albero di decisione*. Il punto di transizione $i'$ può trovarsi in una qualsiasi delle $n$ posizioni, quindi $"SOL"(n) = n$. L'albero di decisione ha almeno $n$ foglie, dunque ha altezza almeno $log_2 n$:
+  $ L(n) = Omega(log_2 n) $
+  Poiché l'algoritmo proposto raggiunge questo limite, esso è *ottimo*.
+]
+
+#example(title: "Alternanza di segno")[
+  Sia $A$ un array di interi non nulli che alterna segno positivo e negativo fino a un indice $i'$, da cui tutti gli elementi mantengono il segno di $A[i']$.
+
+  Con $A = [-2, 1, -1, 5, 7, 3]$, si ha $i' = 3$ poiché $(-2, 1, -1)$ alternano segno e da $A[3] = 5$ in poi tutti sono positivi.
+
+  *Verifica* ($Theta(n)$): si usa `prop(x) = sign(x)` con `sign(x) = "+" "se" x > 0, "-" "altrimenti"`. L'algoritmo scorre l'array verificando che i segni alternino fino a un punto, e siano costanti dopo.
+
+  *Ricerca di $i'$* ($Theta(log n)$): si usa la ricerca binaria. Al passo corrente con indici $[p, r]$:
+  - si calcola $q = (p + r) \/ 2$;
+  - se `sign(A[q]) == sign(A[q+1])`, siamo nella zona costante: $i'$ è in $[p, q]$;
+  - altrimenti, siamo ancora nella zona alternante: $i'$ è in $[q+1, r]$.
+]
+
+#example(title: "Alternanza di parità")[
+  Sia $A$ un array di interi che alterna elementi pari e dispari fino a un indice $i'$, da cui tutti gli elementi mantengono la parità di $A[i']$.
+
+  Con $A = [0, 3, 2, 8, 4, 10]$, si ha $i' = 2$ poiché $(0, 3, 2)$ alternano parità e da $A[2] = 2$ in poi tutti sono pari.
+
+  Si usa `prop(x) = x mod 2`. La struttura degli algoritmi è identica al caso precedente: cambia solo la funzione `prop`.
+]
+
+#note(title: "Lo schema generale degli esercizi di problem solving")[
+  In un esercizio di problem solving su array, la traccia tipica chiede:
+  + un *esempio* concreto di array con la proprietà;
+  + lo *pseudocodice* di un algoritmo di verifica, la sua *complessità* e la sua *ottimalità*;
+  + lo *pseudocodice* di un algoritmo di ricerca (assumendo la proprietà), la sua *complessità* e la sua *ottimalità*.
+
+  Per la verifica, l'ottimalità si dimostra con il *fooling argument* (criterio della dimensione dell'input): un avversario che modifica l'ultimo elemento forza $Omega(n)$.
+
+  Per la ricerca, l'ottimalità si dimostra con l'*albero di decisione*: $n$ soluzioni possibili implicano $Omega(log n)$ confronti.
+]

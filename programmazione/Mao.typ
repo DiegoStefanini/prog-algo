@@ -1271,3 +1271,37 @@ dove $rho' = rho["Id" |-> ("Id"_1, ..., "Id"_n, C, rho')]$
 
   La funzione è *ben tipata* e ha tipo $("int"[], "int", "int") arrow.r "bool"$.
 ]
+
+=== Valori iniziali ammissibili per i parametri
+
+Quando una funzione ricorsiva viene definita per risolvere un problema specifico (ad esempio "controllare se l'array contiene almeno $k$ occorrenze di `'z'`"), il type checking garantisce che la funzione sia *ben tipata*, ma non dice con quali valori i parametri debbano essere inizializzati per ottenere il comportamento desiderato. Questa è una domanda *semantica*, non sintattica, e richiede di ragionare sul significato della funzione.
+
+#note(title: "Determinare i valori iniziali")[
+  Per determinare i valori iniziali ammissibili dei parametri di una funzione ricorsiva, si procede così:
+  + *Leggere la specifica*: cosa deve fare la funzione? (es. "controllare se gli ultimi $k$ caratteri sono tutti `'z'`")
+  + *Identificare il caso base*: quale condizione ferma la ricorsione? (es. un flag booleano `b`, un indice fuori dai limiti)
+  + *Ragionare all'indietro*: con quali valori iniziali il caso base viene raggiunto correttamente e il risultato è quello voluto?
+
+  In particolare, se la funzione usa:
+  - un *parametro indice* `p` che avanza ad ogni chiamata ricorsiva, il valore iniziale deve corrispondere alla posizione di partenza della scansione (ad esempio `p = 0` per scandire dal primo elemento, oppure `p = a.length - 1` per scandire dall'ultimo);
+  - un *parametro flag booleano* `b` che controlla il caso base, il valore iniziale deve essere quello che permette alla ricorsione di procedere (tipicamente `b = false` se il caso base è `if (b) { return b; }`).
+]
+
+#example(title: "Valori iniziali per il controllo di caratteri")[
+  Consideriamo una funzione ricorsiva:
+  ```
+  bool f1(char[] a, int k, bool b, int p) {
+    bool r = false;
+    if (b || p >= a.length || p < 0) {
+      r := b;
+    } else {
+      if (a[p] == 'z') { k := k-1; }
+      r := f1(a, k, k<0, p+1);
+    }
+    return r;
+  }
+  ```
+  La funzione controlla se la stringa `a` contiene strettamente più di `k` caratteri `'z'`. Ad ogni passo incrementa `p` e decrementa `k` quando trova `'z'`. La ricorsione si ferma quando `b` diventa vero (cioè `k < 0`, trovati abbastanza `'z'`) oppure quando `p` esce dai limiti.
+
+  I valori iniziali ammissibili sono: $b = "false"$ (perché con $b = "true"$ la funzione ritornerebbe immediatamente senza scandire) e $p = 0$ (per partire dall'inizio dell'array).
+]
