@@ -88,7 +88,7 @@ Anche una funzione hash ben progettata non può evitare completamente le collisi
 ==== Risoluzione delle collisioni mediante concatenamento
 
 #definizione(titolo: "Concatenamento")[
-  Nel *concatenamento* (o _chaining_), ogni cella $T[j]$ della tavola hash contiene un puntatore alla testa di una lista concatenata di tutti gli elementi la cui chiave ha valore hash $j$. Se nessun elemento è mappato nella cella $j$, allora $T[j] = "NIL"$.
+  Nel *concatenamento* (o _chaining_ o _liste di trabocco_), ogni cella $T[j]$ della tavola hash contiene un puntatore alla testa di una lista concatenata di tutti gli elementi la cui chiave ha valore hash $j$. Se nessun elemento è mappato nella cella $j$, allora $T[j] = "NIL"$.
 ]
 
 Le operazioni di dizionario con concatenamento sono le seguenti:
@@ -405,28 +405,40 @@ L'analisi al caso medio richiede tre ipotesi:
   Con una tavola piena al 50% ($alpha = 1/2$), una ricerca senza successo esamina in media solo 2 celle: prestazioni eccellenti.
 ]
 
-==== Scansione lineare
+==== Ispezione lineare
 
-Il metodo più semplice per calcolare la sequenza di ispezione è la *scansione lineare* (o _linear probing_).
+Il metodo più semplice per calcolare la sequenza di ispezione è l'*ispezione lineare* (o _linear probing_).
 
-#definizione(titolo: "Scansione lineare")[
-  Nella *scansione lineare*, data una funzione hash ausiliaria $h' : U arrow.r {0, 1, ..., m-1}$, la funzione di ispezione è:
+#definizione(titolo: "Ispezione lineare")[
+  Nell'*ispezione lineare*, data una funzione hash ausiliaria $h' : U arrow.r {0, 1, ..., m-1}$, la funzione di ispezione è:
 
   $ h(k, i) = (h'(k) + i) mod m $
 
   La sequenza di ispezione parte dalla posizione $h'(k)$ e procede ciclicamente: $chevron.l h'(k), h'(k) + 1, h'(k) + 2, ..., 0, 1, ..., h'(k) - 1 chevron.r$.
 ]
 
-#esempio(titolo: "Scansione lineare")[
+#esempio(titolo: "Ispezione lineare")[
   Con $m = 7$ e $h'(k) = k mod 7$, la sequenza di ispezione per la chiave $k = 9$ è:
   - $h'(9) = 9 mod 7 = 2$
   - Sequenza: $chevron.l 2, 3, 4, 5, 6, 0, 1 chevron.r$
 
-  Il punto di partenza dipende dalla chiave (tramite $h'(k)$), ma il passo di scansione è costante ($+1$).
+  Il punto di partenza dipende dalla chiave (tramite $h'(k)$), ma il passo di ispezione è costante ($+1$).
 ]
 
 #osservazione[
-  La scansione lineare è semplice da implementare ma soffre di *clustering primario*: le chiavi che collidono tendono a formare blocchi contigui di celle occupate, aumentando il tempo di ricerca. Metodi più sofisticati come la *scansione quadratica* e il *doppio hash* riducono questo fenomeno.
+  L'ispezione lineare è facile da implementare ma presenta un problema noto come *addensamento primario* (o _clustering primario_): si formano lunghe file di celle occupate (blocchi contigui), che aumentano il tempo medio di ricerca. Metodi come l'*ispezione quadratica* e il *doppio hash* riducono questo fenomeno.
+]
+
+==== Ispezione quadratica
+
+L'*ispezione quadratica* (o _quadratic probing_) usa una funzione hash della forma:
+
+$ h(k, i) = (h'(k) + c_1 i + c_2 i^2) mod m $
+
+dove $h'$ è una funzione hash ausiliaria, $c_1$ e $c_2 eq.not 0$ sono costanti ausiliarie e $i = 0, 1, ..., m-1$. La posizione iniziale di ispezione è $T[h'(k)]$; le successive posizioni sono scostate di quantità dipendenti da un polinomio di secondo grado in $i$.
+
+#osservazione[
+  Questo metodo funziona molto meglio dell'ispezione lineare, ma per poter esaminare l'intera tavola i valori di $c_1, c_2$ e $m$ devono soddisfare particolari restrizioni. Inoltre, se due chiavi hanno la stessa posizione iniziale di ispezione, esse avranno la medesima sequenza di ispezione. Questa proprietà crea una forma meno grave di clustering detta *addensamento secondario*.
 ]
 
 ==== Doppio hash

@@ -52,7 +52,7 @@
     align: (right, left),
     [#text(weight: "bold")[Docente:]], [Prof.ssa Anna Bernasconi],
     [#text(weight: "bold")[Autore:]], [Diego Stefanini],
-    [#text(weight: "bold")[cc:]], [Davide Paolocchi],
+    [#text(weight: "bold")[cc:]], [Davide Paolicchi],
   )
 ]
 
