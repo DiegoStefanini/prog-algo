@@ -172,6 +172,18 @@ Operazioni: `Maximum`, `Extract-Max`, `Increase-Key`, `Insert`.
 
 *Insert:* $"heapsize" := "heapsize" + 1$, $A["heapsize"] := -infinity$, `heapIncreaseKey(A, heapsize, key)`.
 
+== Varianti e Problemi Tipici
+
+*Heap $d$-ario (es. Ternario $d=3$):* nodi interni hanno $d$ figli.
+- *Figli (1-based):* $d(i-1) + 2$ fino a $d(i-1) + d + 1$
+- *Padre di $j$:* $floor((j + d - 2) \/ d)$
+- Altezza $approx log_d n$. Extract-Max costa $O(d log_d n)$, Insert costa $O(log_d n)$.
+
+*Trovare il $k$-esimo elemento minore:*
++ Ordinamento: $O(n log n)$.
++ Costruzione min-heap $O(n)$ e $k$ `Extract-Min`: $O(n + k log n)$.
++ Max-heap di dim $k$: Inserisci primi $k$ el., per i successivi se $< "Max"$, fai `Extract-Max` e `Insert`. Tempo $O(n log k)$.
+
 // ============================================================
 // SEZIONE 2: LISTE, PILE, CODE, ALBERI BINARI
 // ============================================================
@@ -471,6 +483,15 @@ $ h(k) = k mod m $
 
 Chiavi non numeriche $arrow.r$ convertire in $NN$ (es. stringa in base 128 tramite codici ASCII).
 
+=== Indirizzamento aperto
+
+Tutti gli elementi in array $T$ (nessuna lista esterna, $alpha <= 1$). Si ispezionano sequenze di celle usando funzione hash estesa: $h(k, i)$ con $i = 0, ..., m-1$.
+- *Lineare:* $h(k, i) = (h'(k) + i) mod m$ (soffre di clustering primario).
+- *Quadratica:* $h(k, i) = (h'(k) + c_1 i + c_2 i^2) mod m$ (clustering secondario).
+- *Doppio hash:* $h(k, i) = (h_1(k) + i h_2(k)) mod m$. $h_2(k)$ e $m$ devono essere coprimi.
+
+*Ricerca/Inserimento:* ispeziona sequenza finché non trovi $k$ o cella vuota. *Cancellazione:* marca come `DELETED` per non interrompere la ricerca.
+
 === Confronto realizzazioni di dizionario
 
 #box-rule[
@@ -533,6 +554,24 @@ Non basta confrontare con i figli diretti: servono limiti globali.
 
 Chiamata iniziale: `isBST(T.root, -∞, +∞)`. Complessità: $O(n)$.
 
+=== Invertire un Albero (Specchio)
+
+Scambia figlio sx e dx per ogni nodo. Se ABR, si inverte la proprietà.
+#alg("invertTree(Node x):
+  if x == NIL: return
+  swap(x.left, x.right)
+  invertTree(x.left); invertTree(x.right)")
+
+=== Verifica 1-Bilanciamento
+
+Ritorna altezza se $1$-bilanciato, altrimenti $-1$. Complessità $O(n)$.
+#alg("int checkBalance(Node x):
+  if x == NIL: return 0
+  lh = checkBalance(x.left)
+  rh = checkBalance(x.right)
+  if lh == -1 || rh == -1 || abs(lh - rh) > 1: return -1
+  return 1 + max(lh, rh)")
+
 == Pattern su array
 
 === Ricerca lineare e sentinella
@@ -571,22 +610,33 @@ Ricorrenza: $T(n) = T(n\/2) + O(1) = O(log n)$.
 
 == Complessità algoritmi ricorsivi
 
-=== Master Theorem
+=== Master Theorem (Teorema Principale)
 
-Per ricorrenze $T(n) = a T(n\/b) + f(n)$ con $a >= 1, b > 1$:
+Risolve ricorrenze: $T(n) = a T(n\/b) + f(n)$ con $a >= 1, b > 1$.
 
 #box-rule[
-  Sia $c_"crit" = log_b a$:
-  + Se $f(n) = O(n^(c_"crit" - epsilon))$ per $epsilon > 0$: $T(n) = Theta(n^(c_"crit"))$
-  + Se $f(n) = Theta(n^(c_"crit"))$: $T(n) = Theta(n^(c_"crit") log n)$
-  + Se $f(n) = Omega(n^(c_"crit" + epsilon))$ e $a f(n\/b) <= c f(n)$: $T(n) = Theta(f(n))$
+  Sia $c = log_b a$, confrontiamo $f(n)$ con $n^c$:
+  
+  + *Caso 1 (Dominato dalle foglie):*
+    Se $f(n) = O(n^(c - epsilon))$ per $epsilon > 0$ $arrow.r T(n) = Theta(n^c)$
+  + *Caso 2 (Bilanciato - esteso):*
+    Se $f(n) = Theta(n^c log^k n)$ per $k >= 0$ $arrow.r T(n) = Theta(n^c log^(k+1) n)$
+    (Es: se $f(n) = Theta(n^c)$ allora $k=0 arrow.r T(n) = Theta(n^c log n)$)
+  + *Caso 3 (Dominato dalla radice):*
+    Se $f(n) = Omega(n^(c + epsilon))$ per $epsilon > 0$ *E* se vale
+    la condizione di regolarità: $a f(n\/b) <= d f(n)$ per $d < 1$ $arrow.r T(n) = Theta(f(n))$
 ]
 
-*Esempi:*
-- $T(n) = 2T(n\/2) + Theta(n)$: caso 2, $c_"crit" = 1$ $arrow.r Theta(n log n)$ (MergeSort)
-- $T(n) = T(n\/2) + Theta(1)$: caso 2, $c_"crit" = 0$ $arrow.r Theta(log n)$ (Ricerca binaria)
-- $T(n) = 2T(n\/2) + Theta(1)$: caso 1, $c_"crit" = 1$ $arrow.r Theta(n)$
-- $T(n) = 4T(n\/2) + Theta(n)$: caso 1, $c_"crit" = 2$ $arrow.r Theta(n^2)$
+*Guida all'esame:*
+1. Calcola $c = log_b a$ e scrivi $n^c$.
+2. Confronta asintoticamente $n^c$ con $f(n)$. Se uno cresce "polinomialmente più veloce", ricadiamo nel Caso 1 o 3. Se hanno la stessa crescita (a meno di $log$), è il Caso 2.
+
+*Esempi pratici:*
+- $T(n) = 2T(n\/2) + Theta(n)$: $a=2, b=2 => c=1$. $n^1$ vs $n^1$. Caso 2 ($k=0$) $arrow.r Theta(n log n)$
+- $T(n) = T(n\/2) + Theta(1)$: $a=1, b=2 => c=0$. $n^0$ vs $1$. Caso 2 ($k=0$) $arrow.r Theta(log n)$
+- $T(n) = 4T(n\/2) + Theta(n)$: $a=4, b=2 => c=2$. $n^2$ vs $n^1$. Caso 1 $arrow.r Theta(n^2)$
+- $T(n) = 3T(n\/4) + n log n$: $a=3, b=4 => c approx 0.79$. $n^(0.79)$ vs $n^1$. Caso 3 $arrow.r Theta(n log n)$
+- $T(n) = 2T(n\/2) + n log n$: $a=2, b=2 => c=1$. $n^1$ vs $n^1 log n$. Caso 2 ($k=1$) $arrow.r Theta(n log^2 n)$
 
 === Albero di ricorsione (metodo iterativo)
 
@@ -600,4 +650,49 @@ Espandere la ricorrenza fino al caso base, sommare i costi per livello. Utile qu
   + *Per array:* considera approcci in-place (due puntatori, partizione), oppure divide-et-impera
   + *Verifica correttezza:* invariante di ciclo (inizializzazione, mantenimento, terminazione) o induzione
   + *Complessità:* Master Theorem per D&I, somma costi per iterativi
+]
+
+// ============================================================
+// SEZIONE 5: ORDINAMENTI LINEARI
+// ============================================================
+
+= Ordinamenti Lineari
+
+Per scendere sotto il limite $Omega(n log n)$ degli ordinamenti basati su confronti, si sfruttano proprietà dei dati (es. interi limitati).
+
+== Counting Sort — $Theta(n + k)$
+
+Ordina $n$ interi nell'intervallo $[0, k]$. Usa gli elementi come indici. È *stabile*.
+
+#box-rule[
+  *Fasi:*
+  1. *Frequenze:* Conta occorrenze in `C[0..k]`.
+  2. *Cumulate:* `C[i] += C[i-1]` (posizioni finali).
+  3. *Costruzione:* Scorri `A` _al contrario_ per stabilità: metti `A[j]` in `B[C[A[j]]]` e decrementa `C[A[j]]`.
+]
+
+#alg("countingSort(A, B, k):
+  let C[0..k] = 0
+  for j = 1 to A.length: C[A[j]]++
+  for i = 1 to k: C[i] += C[i - 1]
+  for j = A.length downto 1:
+    B[C[A[j]]] = A[j]
+    C[A[j]]--")
+
+*Tempo:* $Theta(n + k)$. Se $k = O(n)$, il tempo è $Theta(n)$.
+*Spazio:* $O(n + k)$ (non in-place).
+
+== Radix Sort — $Theta(d(n + k))$
+
+Ordina numeri di $d$ cifre partendo dalla meno significativa (LSD, _Least Significant Digit_) alla più significativa.
+
+#alg("radixSort(A, d):
+  for i = 1 to d:
+    usa ordinamento stabile (es. Counting Sort) su cifra i-esima")
+
+#box-rule[
+  *Analisi e Note:*
+  - *Perché LSD:* Se due numeri hanno la stessa cifra su colonna $i$, l'algoritmo stabile preserva il loro ordine relativo, determinato in modo corretto dai passi precedenti (cifre meno significative).
+  - *Tempo:* $d$ passate di Counting Sort. Totale $Theta(d(n + k))$ dove $k$ è la base (es. 10, o $2^r$).
+  - *Ottimizzazione bit:* Un intero di $b$ bit si può spezzare in $d = ceil(b\/r)$ cifre da $r$ bit. Con $r approx log n$, il tempo diventa $O(b n \/ log n)$.
 ]
