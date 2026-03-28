@@ -9,7 +9,7 @@
   columns: 2,
 )
 
-#set text(font: "New Computer Modern", size: 8pt)
+#set text(font: "Roboto", size: 8pt)
 #set par(justify: true, leading: 0.4em, spacing: 0.5em)
 
 #show heading.where(level: 1): it => {
@@ -44,7 +44,7 @@
 )
 
 #let kw(body) = text(weight: "bold")[#body]
-#let alg(body) = text(font: "New Computer Modern", size: 7pt)[#raw(body)]
+#let alg(body) = text(font: "Source Code Pro", size: 7pt)[#raw(body)]
 
 // ============================================================
 // INTESTAZIONE

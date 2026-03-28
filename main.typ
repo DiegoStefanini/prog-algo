@@ -190,3 +190,20 @@ Queste dispense raccolgono gli argomenti del corso di Programmazione ed Algoritm
 #include "algoritmica/strutture_dati.typ"
 #include "algoritmica/alberi_binari.typ"
 #include "algoritmica/tabelle_hash.typ"
+
+// ========================================
+// CAPITOLO 9 - PROGRAMMAZIONE DINAMICA
+// ========================================
+
+= Programmazione Dinamica
+
+#include "algoritmica/programmazione_dinamica.typ"
+
+// ========================================
+// CAPITOLO 10 - GRAFI
+// ========================================
+
+= Grafi
+
+#include "algoritmica/grafi.typ"
+#include "algoritmica/visita_grafi.typ"

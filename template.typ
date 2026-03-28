@@ -37,7 +37,7 @@
     },
   )
 
-  set text(font: "New Computer Modern", size: 11pt, lang: "it")
+  set text(font: "STIX Two Text", size: 11pt, lang: "it")
   set par(justify: true, leading: 0.65em, first-line-indent: 1em)
   set heading(numbering: "1.1.")
   set math.equation(numbering: "(1)")
