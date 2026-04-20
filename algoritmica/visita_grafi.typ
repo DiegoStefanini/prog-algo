@@ -1,17 +1,8 @@
 #import "../template.typ": *
 
-== Visita di un grafo
-
-Una *visita* (o *attraversamento*) di un grafo è l'esame sistematico di tutti i suoi vertici e archi. Può essere:
-- *completa*: visita tutto il grafo (se connesso);
-- *parziale*: visita solo la componente (fortemente) connessa raggiungibile dalla sorgente.
-
-Le due strategie principali sono:
-
-- *BFS* — Breadth First Search (visita in *ampiezza*): generalizza la visita per livelli di un albero. Scopre i vertici in ordine di distanza crescente dalla sorgente.
-- *DFS* — Depth First Search (visita in *profondità*): generalizza la visita radice-foglie di un albero. Esplora il più lontano possibile prima di tornare indietro.
-
 == Visita in Ampiezza (BFS)
+
+Una *visita* (o *attraversamento*) di un grafo è l'esame sistematico di tutti i suoi vertici e archi. Può essere *completa* (visita tutto il grafo, se connesso) o *parziale* (visita solo la componente (fortemente) connessa raggiungibile dalla sorgente). Le due strategie principali sono la *BFS* (_Breadth First Search_, visita in ampiezza), che scopre i vertici in ordine di distanza crescente dalla sorgente, e la *DFS* (_Depth First Search_, visita in profondità, trattata nella sezione successiva), che esplora il più lontano possibile prima di tornare indietro.
 
 === Struttura e proprietà
 
