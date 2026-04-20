@@ -73,6 +73,9 @@
 
   show heading: set text(rgb("#003366"))
 
+  // Tabelle non spezzabili tra pagine (evita orfanizzazione di header)
+  show table: it => block(breakable: false, it)
+
   // Capitoli: stile "CAPITOLO N" con linee colorate
   show heading.where(level: 1): it => {
     contatore-blocco.update(0)

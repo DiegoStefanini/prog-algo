@@ -220,14 +220,14 @@ poiché ogni arco contribuisce per un fattore 2 (incrementa il grado dei due est
 Costo in spazio: $S(n,m) = Theta(n^2)$. Va bene per grafi densi; inefficiente per grafi sparsi.
 
 #table(
-  columns: (auto, auto, auto),
-  align: (left, center, left),
+  columns: (auto, auto, auto, auto),
+  align: (left, left, center, left),
   stroke: 0.5pt,
-  [*Operazione*], [*Costo*], [*Note*],
-  [`adiacenti(u, v)`], [$O(1)$], [return $A[u,v]$],
-  [`grado(u)`], [$Theta(n)$], [scorrere la riga $u$ di $A$],
-  [`aggiungiArco(u, v)`], [$O(1)$], [$A[u,v] = 1$ (e $A[v,u] = 1$ se non orientato)],
-  [`rimuoviArco(u, v)`], [$O(1)$], [$A[u,v] = 0$ (e $A[v,u] = 0$ se non orientato)],
+  [*Operazione*], [*Restituisce*], [*Costo*], [*Come*],
+  [`adiacenti(u, v)`], [booleano: `true` se $(u,v) in E$, `false` altrimenti], [$O(1)$], [return $A[u,v]$],
+  [`grado(u)`], [intero: numero di archi incidenti su $u$], [$Theta(n)$], [scorrere la riga $u$ di $A$ e contare gli 1],
+  [`aggiungiArco(u, v)`], [nulla (effetto: aggiunge l'arco al grafo)], [$O(1)$], [$A[u,v] = 1$ (e $A[v,u] = 1$ se non orientato)],
+  [`rimuoviArco(u, v)`], [nulla (effetto: rimuove l'arco dal grafo)], [$O(1)$], [$A[u,v] = 0$ (e $A[v,u] = 0$ se non orientato)],
 )
 
 === Liste di adiacenza
@@ -245,14 +245,14 @@ Per grafi non orientati: $sum_(v in V) |"Adj"[v]| = 2|E|$ (ogni arco è rapprese
 Per grafi orientati: $sum_(v in V) |"Adj"[v]| = |E|$ (ogni arco è rappresentato una sola volta).
 
 #table(
-  columns: (auto, auto, auto),
-  align: (left, center, left),
+  columns: (auto, auto, auto, auto),
+  align: (left, left, center, left),
   stroke: 0.5pt,
-  [*Operazione*], [*Costo*], [*Note*],
-  [`adiacenti(u, v)`], [$O(delta(u))$], [cercare $v$ nella lista $"Adj"[u]$],
-  [`grado(u)`], [$Theta(delta(u))$], [lunghezza di $"Adj"[u]$],
-  [`aggiungiArco(u, v)`], [$O(1)$], [liste non ordinate],
-  [`rimuoviArco(u, v)`], [$O(delta(u)+delta(v))$], [eliminare $v$ da $"Adj"[u]$ e $u$ da $"Adj"[v]$],
+  [*Operazione*], [*Restituisce*], [*Costo*], [*Come*],
+  [`adiacenti(u, v)`], [booleano: `true` se $(u,v) in E$, `false` altrimenti], [$O(delta(u))$], [cercare $v$ scorrendo la lista $"Adj"[u]$],
+  [`grado(u)`], [intero: numero di archi incidenti su $u$], [$Theta(delta(u))$], [calcolare la lunghezza di $"Adj"[u]$],
+  [`aggiungiArco(u, v)`], [nulla (effetto: aggiunge l'arco al grafo)], [$O(1)$], [inserire $v$ in $"Adj"[u]$ (e $u$ in $"Adj"[v]$ se non orientato), liste non ordinate],
+  [`rimuoviArco(u, v)`], [nulla (effetto: rimuove l'arco dal grafo)], [$O(delta(u)+delta(v))$], [cercare ed eliminare $v$ da $"Adj"[u]$ e $u$ da $"Adj"[v]$],
 )
 
 #osservazione[
