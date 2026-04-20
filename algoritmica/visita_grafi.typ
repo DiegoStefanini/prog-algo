@@ -20,7 +20,7 @@ Le due strategie principali sono:
   - $G = (V,E)$: grafo rappresentato con liste di adiacenza
   - $s in V$: vertice *sorgente*
 
-  L'algoritmo scopre tutti i vertici raggiungibili da $s$ in ordine di distanza crescente, usando una *coda* (FIFO). Al termine, $v.d = delta(s,v)$ per ogni vertice raggiungibile.
+  L'algoritmo scopre tutti i vertici raggiungibili da $s$ in ordine di distanza crescente, usando una *coda* con disciplina *FIFO* (_First-In First-Out_: il primo elemento inserito è anche il primo a uscire). Al termine, $v.d = delta(s,v)$ per ogni vertice raggiungibile.
 ]
 
 Per ogni vertice $v in V$ si mantengono tre attributi:
@@ -87,19 +87,34 @@ $ T(n,m) = O(n + m) $
 ]
 
 #esempio(titolo: "BFS(G, 1) su grafo con due componenti connesse")[
-  Grafo con 11 vertici: la componente di 1 contiene $\{1,2,3,4,5,6,7,8\}$, la componente isolata contiene $\{9,10,11\}$.
+  Grafo con 11 vertici e due componenti connesse. Archi nella componente di 1: $(1,2),(1,3),(1,4),(1,6),(2,3),(3,4),(4,7),(6,5),(6,8)$; archi nella componente $\{9,10,11\}$: $(9,10),(10,11)$, non raggiungibile da 1.
 
-  Evoluzione della coda $Q$ durante BFS(G, 1):
-  $Q: 1 arrow.r 2, 3, 4, 6 arrow.r 3, 4, 6 arrow.r 4, 6 arrow.r 6, 5, 7 arrow.r 5, 7 arrow.r 7, 8 arrow.r 8 arrow.r emptyset$
+  Evoluzione passo-passo (si assume $"Adj"$ ordinata in modo crescente):
 
-  Distanze calcolate: $1.d=0$, $2.d=1$, $3.d=1$, $4.d=1$, $6.d=1$, $5.d=2$, $7.d=2$, $8.d=2$.
+  #table(
+    columns: (auto, auto, auto, auto),
+    align: (center, left, left, left),
+    stroke: 0.5pt,
+    [*Passo*], [*$u$ estratto*], [*Vicini scoperti (B $arrow$ G)*], [*Coda $Q$ dopo*],
+    [0], [— (init)], [$s = 1$ grigio, $1.d = 0$], [$[1]$],
+    [1], [$1$], [$2, 3, 4, 6$ con $d = 1$], [$[2, 3, 4, 6]$],
+    [2], [$2$], [— (tutti già grigi)], [$[3, 4, 6]$],
+    [3], [$3$], [— (tutti già grigi)], [$[4, 6]$],
+    [4], [$4$], [$7$ con $d = 2$], [$[6, 7]$],
+    [5], [$6$], [$5, 8$ con $d = 2$], [$[7, 5, 8]$],
+    [6], [$7$], [—], [$[5, 8]$],
+    [7], [$5$], [—], [$[8]$],
+    [8], [$8$], [—], [$[]$],
+  )
 
-  I vertici 9, 10, 11 restano bianchi con $d = +infinity$ (non raggiungibili da 1).
+  *Distanze finali:* $1.d = 0$; $2.d = 3.d = 4.d = 6.d = 1$; $5.d = 7.d = 8.d = 2$.
 
-  Albero BFS radicato in 1:
+  *Albero BFS* radicato in 1:
   - livello 0: $\{1\}$
   - livello 1: $\{2, 3, 4, 6\}$
-  - livello 2: $\{5, 7, 8\}$
+  - livello 2: $\{5, 7, 8\}$ con $5.pi = 6, 7.pi = 4, 8.pi = 6$
+
+  I vertici 9, 10, 11 restano *bianchi* con $d = +infinity$: BFS ha esplorato solo la componente connessa di 1.
 ]
 
 #osservazione[
@@ -110,13 +125,17 @@ $ T(n,m) = O(n + m) $
 
 La correttezza di BFS si dimostra con una serie di lemmi [CLRS: 22.2].
 
-#lemma(titolo: "Triangolare")[
+#lemma(titolo: "Triangolare [CLRS: Lemma 22.1]")[
   Sia $G = (V,E)$ un grafo orientato o non orientato e $s in V$. Per ogni arco $(u,v) in E$:
   $ delta(s,v) <= delta(s,u) + 1 $
 ]
 
 #dimostrazione[
-  Se $u$ è raggiungibile da $s$, lo è anche $v$: il cammino minimo da $s$ a $v$ non può essere più lungo di quello da $s$ a $u$ seguito dall'arco $(u,v)$. Se $u$ non è raggiungibile, $delta(s,u) = +infinity$ e la disuguaglianza è banalmente soddisfatta.
+  Se $u$ è raggiungibile da $s$, lo è anche $v$: il cammino minimo da $s$ a $v$ non può essere più lungo del cammino minimo da $s$ a $u$ seguito dall'arco $(u,v)$, quindi $delta(s,v) <= delta(s,u) + 1$. Se $u$ non è raggiungibile, $delta(s,u) = +infinity$ e la disuguaglianza è banalmente soddisfatta.
+]
+
+#osservazione[
+  _Il lemma vale anche quando $v$ non è raggiungibile da $s$._ In quel caso $delta(s,v) = +infinity$, ma allora anche $delta(s,u) = +infinity$ (perché se $u$ fosse raggiungibile, attraversando l'arco $(u,v)$ lo sarebbe anche $v$): la disuguaglianza $+infinity <= +infinity + 1$ è soddisfatta.
 ]
 
 #lemma(titolo: "Limite superiore")[
@@ -133,15 +152,17 @@ La correttezza di BFS si dimostra con una serie di lemmi [CLRS: 22.2].
   dove l'ultima disuguaglianza segue dal Lemma Triangolare. Il valore $v.d$ non cambierà più. ✓
 ]
 
-#lemma(titolo: "Proprietà della coda")[
-  Durante l'esecuzione di BFS, se $Q = [v_1, v_2, dots, v_r]$ con $v_1$ in testa, allora:
+#lemma(titolo: "Proprietà della coda [CLRS: Lemma 22.3]")[
+  Durante l'esecuzione di BFS, se $Q = [v_1, v_2, dots, v_r]$ con $v_1$ in testa e $v_r$ in fondo, allora:
   - $v_r .d <= v_1 .d + 1$
   - $v_i .d <= v_(i+1) .d$ per $i = 1, 2, dots, r-1$
-
-  In ogni istante la coda contiene al più due valori distinti di distanza.
 ]
 
-#corollario(titolo: "Monotonia delle distanze in coda")[
+#ricorda[
+  *Intuizione fondamentale:* in ogni istante la coda $Q$ contiene al più *due valori distinti* di distanza dalla sorgente — precisamente $k$ e $k+1$ per qualche $k$. È questa proprietà che garantisce a BFS di scoprire i vertici in ordine di distanza crescente.
+]
+
+#corollario(titolo: "Monotonia delle distanze in coda [CLRS: Cor. 22.4]")[
   Se il vertice $v_i$ è inserito nella coda prima di $v_j$, allora $v_i .d <= v_j .d$ al momento dell'inserimento di $v_j$.
 ]
 
@@ -150,14 +171,19 @@ La correttezza di BFS si dimostra con una serie di lemmi [CLRS: 22.2].
 ]
 
 #dimostrazione(stile: "per assurdo")[
-  Supponiamo per assurdo che esista $v$ con $v.d eq.not delta(s,v)$. Dal Lemma del Limite Superiore, $v.d > delta(s,v)$ (non può essere minore). Sia $v$ il vertice con il minimo $delta(s,v)$ che riceve un valore errato. Sia $u$ il predecessore immediato di $v$ in un cammino minimo da $s$: $delta(s,v) = delta(s,u) + 1$. Poiché $delta(s,u) < delta(s,v)$, si ha $u.d = delta(s,u)$ (per come abbiamo scelto $v$). Dunque:
-  $ v.d > delta(s,v) = delta(s,u) + 1 = u.d + 1 $
-  Consideriamo il momento in cui $u$ viene estratto da $Q$. Il vertice $v$ può essere:
-  - *Bianco*: allora l'algoritmo impone $v.d = u.d + 1$. Contraddizione.
-  - *Nero*: $v$ era già in coda prima di $u$, quindi per il Corollario $v.d <= u.d$. Contraddizione.
-  - *Grigio*: $v$ è stato scoperto da un vertice $w$ estratto prima di $u$, con $v.d = w.d + 1 <= u.d + 1$. Contraddizione.
+  Procediamo in tre fasi.
 
-  In tutti i casi si raggiunge una contraddizione: $v.d = delta(s,v)$. ✓
+  *(1) Scelta di un controesempio minimo.* Supponiamo per assurdo che esista un vertice $v$ con $v.d eq.not delta(s,v)$. Sia $v$ il vertice *a distanza minima da $s$* che riceve un valore $d$ errato. Per il Lemma del Limite Superiore si ha $v.d >= delta(s,v)$: dunque $v.d > delta(s,v)$, e $v$ è raggiungibile (altrimenti $delta(s,v) = +infinity$ contraddirebbe la disuguaglianza).
+
+  *(2) Derivazione della disuguaglianza chiave.* Sia $u$ il vertice che precede $v$ su un cammino minimo da $s$, quindi $delta(s,v) = delta(s,u) + 1$ (sottostruttura ottima). Poiché $delta(s,u) < delta(s,v)$, per la scelta di $v$ si ha $u.d = delta(s,u)$. Dunque:
+  $ v.d > delta(s,v) = delta(s,u) + 1 = u.d + 1 quad (*) $
+
+  *(3) Analisi al momento in cui $u$ viene estratto da $Q$.* Al momento dell'estrazione di $u$, il vertice $v$ può essere in uno dei tre stati:
+  - *Bianco* ($B$): $v$ non è ancora stato scoperto. La riga 15 di BFS pone $v.d = u.d + 1$, che contraddice $(*)$.
+  - *Nero* ($N$): $v$ è stato estratto da $Q$ prima di $u$. Per il Corollario di monotonia, $v.d <= u.d <= u.d + 1$, contro $(*)$.
+  - *Grigio* ($G$): $v$ è stato scoperto da un vertice $w$ estratto da $Q$ prima di $u$, quindi $v.d = w.d + 1$; per il Corollario di monotonia $w.d <= u.d$, da cui $v.d <= u.d + 1$, contro $(*)$.
+
+  Tutti i casi contraddicono $(*)$: quindi $v.d = delta(s,v)$ per ogni $v in V$. Infine, se $v.pi = u$, l'algoritmo impone $v.d = u.d + 1$, cioè un cammino minimo $s arrow.squiggly v$ si ottiene estendendo con l'arco $(u,v)$ un cammino minimo $s arrow.squiggly u$.
 ]
 
 === PRINT-PATH
@@ -222,10 +248,10 @@ poiché ogni chiamata ricorsiva riguarda un cammino con un vertice in meno: la p
 
 == Visita in Profondità (DFS)
 
-La *visita in profondità* (Depth-First Search, DFS) esplora il grafo seguendo i percorsi più profondi possibili prima di fare *backtrack*. A differenza della BFS (che usa una coda e una sorgente fissa), la DFS:
+La *visita in profondità* (Depth-First Search, DFS) esplora il grafo seguendo i percorsi più profondi possibili prima di fare *backtrack* — cioè tornare indietro al vertice precedente quando non ci sono più archi da esplorare in avanti. A differenza della BFS (che usa una coda e una sorgente fissa), la DFS:
 - esplora *tutto il grafo* (non solo la componente di una sorgente);
 - produce una *foresta DF* (più alberi, non uno solo);
-- assegna a ogni vertice due *timestamp*: $v.d$ (scoperta) e $v.f$ (fine ispezione).
+- assegna a ogni vertice due *timestamp* (marcatori temporali, numeri interi che indicano in che istante si verifica un evento): $v.d$ (istante di scoperta) e $v.f$ (istante di fine ispezione).
 
 === Algoritmo
 
@@ -286,7 +312,7 @@ $ T(|V|, |E|) = Theta(|V| + |E|) $
 === Foresta DF e struttura di parentesi
 
 #definizione(titolo: "Foresta DF")[
-  Il *sottografo dei predecessori* $G_Pi = (V_Pi, E_Pi)$ con $V_Pi = V$ e $E_Pi = {(v.Pi, v) : v in V,\ v.Pi eq.not "NIL"}$ è la *foresta DF* (depth-first forest). Ogni albero della foresta è un *albero DF* (depth-first tree).
+  Il *sottografo dei predecessori* $G_Pi = (V_Pi, E_Pi)$ con $V_Pi = V$ e $E_Pi = {(v.Pi, v) : v in V, v.Pi eq.not "NIL"}$ è la *foresta DF* (depth-first forest). Ogni albero della foresta è un *albero DF* (depth-first tree).
 ]
 
 #osservazione[

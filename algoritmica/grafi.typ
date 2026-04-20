@@ -4,21 +4,59 @@
 
 #definizione(titolo: "Grafo")[
   Un *grafo* $G = (V, E)$ è una coppia di insiemi finiti:
-  - $V$: insieme dei *vertici* (o nodi), che rappresentano oggetti;
+  - $V$: insieme dei *vertici* (o *nodi*), che rappresentano oggetti;
   - $E subset.eq V times V$: insieme degli *archi* (coppie di nodi), che rappresentano relazioni tra oggetti.
 
   I grafi si dividono in:
-  - *non orientati*: $E$ è un insieme di coppie _non ordinate_;
-  - *orientati* (o diretti): $E$ è un insieme di coppie _ordinate_.
+  - *non orientati*: $E$ è un insieme di coppie _non ordinate_ $\{u, v\}$. L'arco può essere percorso in entrambe le direzioni: $(u,v)$ e $(v,u)$ rappresentano lo stesso arco.
+  - *orientati* (o *diretti*): $E$ è un insieme di coppie _ordinate_ $(u, v)$. L'arco ha una direzione fissa da $u$ verso $v$: $(u,v)$ e $(v,u)$ sono archi distinti.
 
   La *dimensione* del grafo è $|V| + |E| = n + m$, con $n = |V|$ (*ordine*) e $m = |E|$.
 ]
 
-#nota[Per grafi non orientati vale $0 <= m <= binom(n, 2) = n(n-1)/2$; per grafi orientati $0 <= m <= n(n-1)$.]
+#nota(titolo: "Coppia ordinata vs non ordinata")[
+  Una *coppia non ordinata* $\{u,v\}$ è un insieme di due elementi: $\{u,v\} = \{v,u\}$ (l'ordine non conta). Una *coppia ordinata* $(u,v)$ distingue il primo dal secondo elemento: $(u,v) eq.not (v,u)$. Intuitivamente, una strada a doppio senso è un arco non orientato; una strada a senso unico è un arco orientato.
+]
 
-Si distinguono:
-- *Grafo sparso*: $m = O(n)$
-- *Grafo denso*: $m = Theta(n^2)$
+#definizione(titolo: "Adiacenza e incidenza")[
+  Dato un arco $(u, v) in E$:
+  - i vertici $u$ e $v$ sono *adiacenti* (si "vedono" direttamente tramite un arco);
+  - l'arco $(u,v)$ è *incidente* sui vertici $u$ e $v$ (li "tocca");
+  - $u$ e $v$ sono gli *estremi* dell'arco.
+
+  Nei grafi orientati si specifica inoltre che l'arco $(u,v)$ *esce* da $u$ ed *entra* in $v$.
+]
+
+#nota[Per grafi non orientati vale $0 <= m <= binom(n, 2) = n(n-1)/2$ (ogni coppia di vertici può avere al più un arco); per grafi orientati $0 <= m <= n(n-1)$ (ogni coppia ordinata può avere al più un arco, quindi il doppio).]
+
+La *densità* di un grafo misura quanti archi contiene rispetto al massimo teorico. Poiché il numero massimo di archi cresce come $Theta(n^2)$, si distinguono due categorie in base alla *velocità di crescita* di $m$ al crescere di $n$:
+
+- *Grafo sparso*: $m = O(n)$. Il numero di archi cresce _linearmente_ con il numero di vertici. Significa che, in media, ogni vertice è collegato a un numero _costante_ di altri vertici (non dipendente da $n$).
+
+  _Esempi:_
+  - Una rete stradale: ogni incrocio ha tipicamente 3-4 strade, indipendentemente da quanti incroci totali ci siano in città.
+  - Un social network con le sole "amicizie strette": ogni persona ne ha circa 5-10.
+  - Un albero: ha sempre $m = n - 1$ archi, qualunque sia $n$.
+
+- *Grafo denso*: $m = Theta(n^2)$. Il numero di archi cresce _quadraticamente_: ogni vertice è collegato a una _frazione_ di tutti gli altri (ad es. alla metà).
+
+  _Esempio estremo:_ il *grafo completo*, indicato con $K_n$, in cui ogni coppia di vertici distinti è collegata. Ha $m = binom(n,2) = n(n-1)/2 = Theta(n^2)$ archi: è il grafo più denso possibile.
+
+#osservazione[
+  La parola _asintotica_ significa: guardiamo come si comporta $m$ quando $n$ diventa grande, non il valore preciso di $m$ per un $n$ fissato. Per questo non esiste una soglia esatta "sotto $k$ archi è sparso, sopra è denso": dipende da come $m$ e $n$ si relazionano al crescere di $n$.
+
+  Per dare un'idea concreta: un grafo con $n = 10$ vertici e $m = 40$ archi è _denso_ (molto vicino al massimo di $binom(10,2) = 45$), mentre $n = 10^6$ vertici con $m = 10^6$ archi è _sparso_ (in media ogni vertice ha un solo arco).
+]
+
+La distinzione è importante perché determina *due scelte pratiche*:
+
++ *Scelta della rappresentazione in memoria*:
+  - Per grafi *densi* conviene la *matrice di adiacenza* (una tabella $n times n$): occupa $Theta(n^2)$ celle, che è lo stesso ordine di $m$, quindi nessuno spreco; in compenso permette di verificare in $O(1)$ se due vertici sono adiacenti.
+  - Per grafi *sparsi* conviene le *liste di adiacenza* (un array di $n$ liste): occupa $Theta(n + m)$ spazio, che per grafi sparsi equivale a $Theta(n)$ — molto meno di $Theta(n^2)$.
+
+  Entrambe le rappresentazioni sono descritte in dettaglio più avanti.
+
++ *Scelta dell'algoritmo*: alcuni algoritmi hanno due versioni con costi diversi a seconda di come sono implementate le strutture interne. Ad esempio, l'algoritmo di Dijkstra costa $O(n^2)$ se $"PQ"$ è un array (adatto ai grafi densi) e $O((n + m) log n)$ se $"PQ"$ è un MIN-heap binario (adatto ai grafi sparsi).
 
 == Grafi non orientati
 
@@ -36,30 +74,54 @@ poiché ogni arco contribuisce per un fattore 2 (incrementa il grado dei due est
 #definizione(titolo: "Cammino")[
   Un *cammino* da $u$ a $v$ in $G$ è una sequenza di vertici $x_0, x_1, dots, x_k$ tale che:
   - $x_0 = u$, $x_k = v$
-  - $forall i,\ 1 <= i <= k:\ (x_(i-1), x_i) in E$
+  - $forall i, 1 <= i <= k: (x_(i-1), x_i) in E$
 
   La *lunghezza* del cammino è $k$ (numero di archi). Un cammino è *semplice* se tutti i vertici sono distinti. Un *ciclo* è un cammino che torna al vertice di partenza ($x_k = u$).
 ]
 
 #definizione(titolo: "Distanza e cammino minimo")[
-  La *distanza* $delta(u,v)$ tra due vertici è il numero minimo di archi da percorrere per spostarsi da $u$ a $v$. Un *cammino minimo* è un cammino semplice di lunghezza $delta(u,v)$.
+  La *distanza* $delta(u,v)$ tra due vertici è il numero minimo di archi da percorrere per spostarsi da $u$ a $v$:
+  $ delta(u,v) = cases("lunghezza minima di un cammino " u arrow.squiggly v & "se esiste un cammino " u arrow.squiggly v, +infinity & "altrimenti") $
+  Un *cammino minimo* da $u$ a $v$ è un cammino semplice di lunghezza $delta(u,v)$.
 ]
 
 #esempio[
   Grafo con $V = {1,2,3,4,5,6,7}$, $E = {(1,2),(1,3),(1,4),(2,3),(2,4),(3,4),(3,5),(3,6),(5,6)}$.
 
+  #align(center, cetz.canvas({
+    import cetz.draw: *
+    let pos = (
+      "1": (0, 2),
+      "2": (2, 2),
+      "3": (2, 0),
+      "4": (0, 0),
+      "5": (4, 0),
+      "6": (4, 2),
+      "7": (6, 1),
+    )
+    let archi = (("1","2"),("1","3"),("1","4"),("2","3"),("2","4"),("3","4"),("3","5"),("3","6"),("5","6"))
+    for (u, v) in archi {
+      line(pos.at(u), pos.at(v), stroke: 0.6pt + black)
+    }
+    for (nome, p) in pos.pairs() {
+      circle(p, radius: 0.3, fill: white, stroke: 0.6pt + black)
+      content(p, text(size: 9pt)[#nome])
+    }
+  }))
+
   - $delta(1,5) = 2$: cammino $chevron.l 1, 3, 5 chevron.r$
   - $chevron.l 1, 4, 2, 3, 5 chevron.r$: cammino di lunghezza 4, non minimo
   - $chevron.l 3, 6, 5, 3 chevron.r$: ciclo
   - $chevron.l 1, 2, 4, 1, 3 chevron.r$: non è un cammino semplice (il vertice 1 appare due volte)
-  - $sum_(v in V) delta(v) = 18 = 2 dot 9$
+  - $delta(1,7) = +infinity$: il vertice 7 è isolato, non raggiungibile da nessun altro vertice
+  - $sum_(v in V) delta(v) = 18 = 2 dot 9$, coerente con $sum_(v in V) delta(v) = 2|E|$
 ]
 
 === Grafo completo, connesso, sottografo
 
 #definizione(titolo: "Grafo completo (Clique)")[
   Un grafo è *completo* (o *clique*) se ogni coppia di vertici distinti è adiacente:
-  $forall u, v in V,\ u eq.not v:\ (u,v) in E$. In un grafo completo $m = binom(n,2)$.
+  $forall u, v in V, u eq.not v: (u,v) in E$. In un grafo completo $m = binom(n,2)$.
 ]
 
 #definizione(titolo: "Grafo connesso")[
@@ -97,7 +159,7 @@ poiché ogni arco contribuisce per un fattore 2 (incrementa il grado dei due est
 ]
 
 #definizione(titolo: "Cammino orientato e ciclo orientato")[
-  Un *cammino orientato* $u arrow.squiggly v$ è un cammino i cui archi sono orientati nel verso corretto: $forall i,\ 1 <= i <= k:\ (x_(i-1), x_i) in E$.
+  Un *cammino orientato* $u arrow.squiggly v$ è un cammino i cui archi sono orientati nel verso corretto: $forall i, 1 <= i <= k: (x_(i-1), x_i) in E$.
 
   Un *ciclo orientato* è un cammino orientato che torna al vertice di partenza.
 ]
@@ -126,10 +188,18 @@ poiché ogni arco contribuisce per un fattore 2 (incrementa il grado dei due est
   Un grafo (orientato o non orientato) è *aciclico* se non contiene cicli.
 ]
 
-#definizione(titolo: "Albero")[
-  Un *albero* è un grafo non orientato, connesso e aciclico. Equivalentemente:
-  - grafo non orientato, connesso, con $|E| = |V| - 1$
-  - grafo non orientato, aciclico, con $|E| = |V| - 1$
+#definizione(titolo: "Albero (libero)")[
+  Un *albero (libero)* è un grafo non orientato, connesso e aciclico.
+]
+
+#teorema(titolo: "Proprietà degli alberi liberi [CLRS: Teo. B.2]")[
+  Sia $G = (V,E)$ un grafo non orientato. Le seguenti affermazioni sono equivalenti:
+  + $G$ è un albero.
+  + Due vertici qualsiasi di $G$ sono collegati da un unico cammino semplice.
+  + $G$ è connesso, ma la rimozione di un arco qualsiasi lo disconnette.
+  + $G$ è connesso e $|E| = |V| - 1$.
+  + $G$ è aciclico e $|E| = |V| - 1$.
+  + $G$ è aciclico, ma l'aggiunta di un arco qualsiasi crea un ciclo.
 ]
 
 #definizione(titolo: "Foresta")[

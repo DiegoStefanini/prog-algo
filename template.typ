@@ -351,6 +351,7 @@
     fill: code-bg,
     stroke: 1pt + luma(200),
     radius: 3pt,
+    breakable: false,
   )[
     #if titolo != none [
       #text(size: 9pt, weight: "bold")[#titolo]

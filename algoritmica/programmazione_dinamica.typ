@@ -22,6 +22,14 @@ Due proprietà devono essere soddisfatte perché la PD sia applicabile:
 
 === Struttura di un algoritmo PD (stile bottom-up)
 
+#nota(titolo: "Top-down vs bottom-up")[
+  Esistono due modi di organizzare il calcolo di un algoritmo PD:
+  - *Top-down* (_dall'alto verso il basso_, per memoizzazione): si parte dalla formulazione ricorsiva del problema originale e si scende verso i sotto-problemi più piccoli, memorizzando i risultati in una tabella per non ricalcolarli.
+  - *Bottom-up* (_dal basso verso l'alto_, per tabulazione): si parte dai sotto-problemi più piccoli (casi base) e si riempie la tabella in ordine crescente fino al problema originale, senza usare la ricorsione.
+
+  I due approcci hanno lo stesso costo asintotico; il bottom-up è in genere preferibile perché evita l'overhead delle chiamate ricorsive.
+]
+
 Un algoritmo PD bottom-up si articola in quattro fasi:
 
 + *Definizione dei sotto-problemi e dimensionamento della tabella.* Si identificano i sotto-problemi $Pi_i$ e si alloca una struttura (array, matrice) per memorizzare i loro risultati.
@@ -163,7 +171,7 @@ $T(n) = Theta(n)$: ogni sotto-problema è risolto una sola volta, le chiamate su
 ]
 
 #esempio(titolo: "n = 4")[
-  Listino: $p_1 = 1,\ p_2 = 5,\ p_3 = 8,\ p_4 = 9$.
+  Listino: $p_1 = 1, p_2 = 5, p_3 = 8, p_4 = 9$.
 
   Una corda di 4 cm ha $2^(n-1) = 8$ tagli possibili. Il ricavo massimo è $r_4 = 10$, ottenuto con due pezzi da 2 cm ($p_2 + p_2 = 5 + 5$).
 ]
@@ -205,7 +213,7 @@ Per sostituzione: $T(n) = 1 + sum_(j=0)^(n-1) T(j)$. Per induzione su $n$ si dim
 #dimostrazione(stile: "per induzione")[
   *Base:* $n = 0$: $T(0) = 1 = 2^0$. $checkmark$
 
-  *Ipotesi induttiva:* $forall j,\ 0 <= j < n:\ T(j) = 2^j$.
+  *Ipotesi induttiva:* $forall j, 0 <= j < n: T(j) = 2^j$.
 
   *Passo:*
   $T(n) = 1 + sum_(j=0)^(n-1) T(j) = 1 + sum_(j=0)^(n-1) 2^j = 1 + (2^n - 1)/(2-1) = 2^n$. $checkmark$
@@ -353,7 +361,7 @@ Per ricavare la formula ricorsiva, ragioniamo sugli ultimi caratteri dei prefiss
 
   - *Se $x_i = y_j$ (match):* questo carattere comune _deve_ far parte della LCS. Lo "consumiamo" e cerchiamo la LCS dei prefissi accorciati $X_(i-1)$ e $Y_(j-1)$. La lunghezza è $c[i-1,j-1] + 1$.
 
-  - *Se $x_i eq.not y_j$ (mismatch):* almeno uno dei due ultimi caratteri _non_ è nella LCS. Proviamo due strade: (a) scartare $x_i$ e cercare LCS di $X_(i-1)$ e $Y_j$; oppure (b) scartare $y_j$ e cercare LCS di $X_i$ e $Y_(j-1)$. Prendiamo la più lunga: $max(c[i-1,j],\ c[i,j-1])$.
+  - *Se $x_i eq.not y_j$ (mismatch):* almeno uno dei due ultimi caratteri _non_ è nella LCS. Proviamo due strade: (a) scartare $x_i$ e cercare LCS di $X_(i-1)$ e $Y_j$; oppure (b) scartare $y_j$ e cercare LCS di $X_i$ e $Y_(j-1)$. Prendiamo la più lunga: $max(c[i-1,j], c[i,j-1])$.
 
   - *Se $i = 0$ o $j = 0$ (caso base):* una delle due sequenze è vuota, quindi non esistono sottosequenze comuni: $c[i,j] = 0$.
 
@@ -399,7 +407,7 @@ $
 
   - *$c[i,j] = 0$* (caso base): una delle due sequenze è vuota — non esistono sottosequenze comuni.
   - *$c[i-1,j-1]+1$* (Caso 1 — match): gli ultimi caratteri coincidono e fanno parte della LCS. Li consumiamo e aggiungiamo 1 alla LCS dei prefissi accorciati.
-  - *$max(c[i-1,j],\ c[i,j-1])$* (Casi 2 e 3 — mismatch): uno dei due ultimi caratteri non è nella LCS. Proviamo a scartarli uno alla volta e prendiamo il risultato migliore.
+  - *$max(c[i-1,j], c[i,j-1])$* (Casi 2 e 3 — mismatch): uno dei due ultimi caratteri non è nella LCS. Proviamo a scartarli uno alla volta e prendiamo il risultato migliore.
 ]
 
 La soluzione ricorsiva diretta è inefficiente perché i sotto-problemi non sono indipendenti: $"LCS"(X_(m-1), Y)$ e $"LCS"(X, Y_(n-1))$ condividono il sotto-problema $"LCS"(X_(m-1), Y_(n-1))$. Con la PD bottom-up, ogni sotto-problema è risolto esattamente una volta.
@@ -443,26 +451,26 @@ Per capire concretamente come funziona l'algoritmo, riempiamo la matrice per un 
 
   *Riga $i=1$ ($x_1 = $ C):* per ogni colonna, confrontiamo C con il carattere corrispondente di $Y$:
   - $c[1,1]$: C $=$ C $arrow.r$ *match* $arrow.r$ $c[0,0]+1 = 0+1 = 1$
-  - $c[1,2]$: C $eq.not$ O $arrow.r$ *mismatch* $arrow.r$ $max(c[0,2],\ c[1,1]) = max(0, 1) = 1$
-  - $c[1,3]$: C $eq.not$ S $arrow.r$ *mismatch* $arrow.r$ $max(c[0,3],\ c[1,2]) = max(0, 1) = 1$
-  - $c[1,4]$: C $eq.not$ A $arrow.r$ *mismatch* $arrow.r$ $max(c[0,4],\ c[1,3]) = max(0, 1) = 1$
+  - $c[1,2]$: C $eq.not$ O $arrow.r$ *mismatch* $arrow.r$ $max(c[0,2], c[1,1]) = max(0, 1) = 1$
+  - $c[1,3]$: C $eq.not$ S $arrow.r$ *mismatch* $arrow.r$ $max(c[0,3], c[1,2]) = max(0, 1) = 1$
+  - $c[1,4]$: C $eq.not$ A $arrow.r$ *mismatch* $arrow.r$ $max(c[0,4], c[1,3]) = max(0, 1) = 1$
 
   *Riga $i=2$ ($x_2 = $ A):*
-  - $c[2,1]$: A $eq.not$ C $arrow.r$ $max(c[1,1],\ c[2,0]) = max(1, 0) = 1$
-  - $c[2,2]$: A $eq.not$ O $arrow.r$ $max(c[1,2],\ c[2,1]) = max(1, 1) = 1$
-  - $c[2,3]$: A $eq.not$ S $arrow.r$ $max(c[1,3],\ c[2,2]) = max(1, 1) = 1$
+  - $c[2,1]$: A $eq.not$ C $arrow.r$ $max(c[1,1], c[2,0]) = max(1, 0) = 1$
+  - $c[2,2]$: A $eq.not$ O $arrow.r$ $max(c[1,2], c[2,1]) = max(1, 1) = 1$
+  - $c[2,3]$: A $eq.not$ S $arrow.r$ $max(c[1,3], c[2,2]) = max(1, 1) = 1$
   - $c[2,4]$: A $=$ A $arrow.r$ *match* $arrow.r$ $c[1,3]+1 = 1+1 = 2$
 
   *Riga $i=3$ ($x_3 = $ S):*
-  - $c[3,1]$: S $eq.not$ C $arrow.r$ $max(c[2,1],\ c[3,0]) = max(1, 0) = 1$
-  - $c[3,2]$: S $eq.not$ O $arrow.r$ $max(c[2,2],\ c[3,1]) = max(1, 1) = 1$
+  - $c[3,1]$: S $eq.not$ C $arrow.r$ $max(c[2,1], c[3,0]) = max(1, 0) = 1$
+  - $c[3,2]$: S $eq.not$ O $arrow.r$ $max(c[2,2], c[3,1]) = max(1, 1) = 1$
   - $c[3,3]$: S $=$ S $arrow.r$ *match* $arrow.r$ $c[2,2]+1 = 1+1 = 2$
-  - $c[3,4]$: S $eq.not$ A $arrow.r$ $max(c[2,4],\ c[3,3]) = max(2, 2) = 2$
+  - $c[3,4]$: S $eq.not$ A $arrow.r$ $max(c[2,4], c[3,3]) = max(2, 2) = 2$
 
   *Riga $i=4$ ($x_4 = $ A):*
-  - $c[4,1]$: A $eq.not$ C $arrow.r$ $max(c[3,1],\ c[4,0]) = max(1, 0) = 1$
-  - $c[4,2]$: A $eq.not$ O $arrow.r$ $max(c[3,2],\ c[4,1]) = max(1, 1) = 1$
-  - $c[4,3]$: A $eq.not$ S $arrow.r$ $max(c[3,3],\ c[4,2]) = max(2, 1) = 2$
+  - $c[4,1]$: A $eq.not$ C $arrow.r$ $max(c[3,1], c[4,0]) = max(1, 0) = 1$
+  - $c[4,2]$: A $eq.not$ O $arrow.r$ $max(c[3,2], c[4,1]) = max(1, 1) = 1$
+  - $c[4,3]$: A $eq.not$ S $arrow.r$ $max(c[3,3], c[4,2]) = max(2, 1) = 2$
   - $c[4,4]$: A $=$ A $arrow.r$ *match* $arrow.r$ $c[3,3]+1 = 2+1 = 3$
 
   *Matrice completa:*
