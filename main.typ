@@ -208,3 +208,11 @@ Queste dispense raccolgono gli argomenti del corso di Programmazione ed Algoritm
 #include "algoritmica/grafi.typ"
 #include "algoritmica/visita_grafi.typ"
 #include "algoritmica/dijkstra.typ"
+
+// ========================================
+// CAPITOLO 11 - CALCOLABILITÀ E COMPLESSITÀ
+// ========================================
+
+= Calcolabilità e Complessità Computazionale
+
+#include "algoritmica/calcolabilita.typ"
