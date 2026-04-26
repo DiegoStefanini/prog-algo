@@ -4,7 +4,7 @@
 
 In tutto il resto della dispensa abbiamo progettato algoritmi *efficienti*: $O(n log n)$ per l'ordinamento, $O(n)$ per Fibonacci con la programmazione dinamica, $O(n + m)$ per la visita di un grafo. In questo capitolo conclusivo cambiamo prospettiva e ci chiediamo quali siano i *limiti intrinseci* del calcolo: esistono problemi che nessun calcolatore potrà mai risolvere? Esistono problemi risolvibili in linea di principio ma per i quali ogni algoritmo richiede tempo proibitivo nella pratica?
 
-Le risposte affirmative a queste domande --- e la loro dimostrazione --- costituiscono i fondamenti di due teorie distinte ma intrecciate: la *teoria della calcolabilità* e la *teoria della complessità*.
+Le risposte affermative a queste domande --- e la loro dimostrazione --- costituiscono i fondamenti di due teorie distinte ma intrecciate: la *teoria della calcolabilità* e la *teoria della complessità*.
 
 #definizione(titolo: "Problema computazionale")[
   Un *problema computazionale* è una funzione matematica che associa ad ogni *istanza* di ingresso un *risultato*. Formalmente, fissati interi $k, j >= 1$, un problema è una funzione
@@ -45,9 +45,9 @@ Per dimostrare l'esistenza di problemi indecidibili, mostreremo che gli *algorit
 
 #esempio(titolo: "Insiemi numerabili classici")[
   - $NN$ stesso, banalmente.
-  - $ZZ$: si enumera $0, -1, 1, -2, 2, -3, 3, dots$ associando $n arrow.r 2|n|$ se $n < 0$ e $n arrow.r 2n + 1$ se $n >= 0$.
+  - $ZZ$: si enumera $0, -1, 1, -2, 2, -3, 3, dots$ associando all'intero $k$ il naturale $2k$ se $k >= 0$ e $2|k| - 1$ se $k < 0$ (così $0 arrow.r 0$, $-1 arrow.r 1$, $1 arrow.r 2$, $-2 arrow.r 3$, $dots$).
   - I numeri naturali pari: $0, 2, 4, 6, dots$ con la biiezione $n arrow.l.r.long 2n$.
-  - Le coppie $NN times NN$, gli interi razionali $QQ$, e in generale ogni unione numerabile di insiemi numerabili.
+  - Le coppie $NN times NN$, i numeri razionali $QQ$, e in generale ogni unione numerabile di insiemi numerabili.
 ]
 
 === Enumerazione delle sequenze finite
@@ -129,7 +129,9 @@ Mettiamo insieme due osservazioni di natura diversa.
   _L'insieme dei problemi computazionali $f: NN^k arrow.r NN^j$ non è numerabile._
 ]
 
-(Diretta conseguenza del Teorema di Cantor.)
+#dimostrazione(stile: "riduzione a Cantor")[
+  Restringendo il codominio a ${0, 1}$ otteniamo le funzioni booleane $f: NN^k arrow.r {0, 1}$, che a loro volta contengono come sotto-insieme proprio le $f: NN arrow.r {0, 1}$ (basta usare una sola variabile). Per il Teorema di Cantor questo sotto-insieme non è numerabile. Un sovrainsieme di un insieme non numerabile non è numerabile, da cui la tesi. #h(1fr)
+]
 
 #teorema(titolo: "Esistenza di problemi indecidibili")[
   _Esistono problemi computazionali per i quali non esiste alcun algoritmo di risoluzione._
@@ -221,7 +223,7 @@ L'algoritmo cerca il più piccolo intero pari $n >= 4$ che _non_ sia somma di du
     ```
   ]
 
-  Notiamo che è legittimo passare $A$ sia come algoritmo sia come dato (entrambi sono sequenze di simboli, a maggior ragione sull'alfabeto comune). L'ispezione di $"Paradosso"$ mostra:
+  Notiamo che è legittimo passare $A$ sia come algoritmo sia come dato: entrambi sono sequenze di simboli sullo stesso alfabeto e una stessa stringa può essere interpretata, a seconda del contesto, come codice o come input. L'ispezione di $"Paradosso"$ mostra:
 
   $ "Paradosso"(A) " termina" arrow.l.r.long "Arresto"(A, A) = 0 arrow.l.r.long A(A) " non termina." $
 
@@ -413,7 +415,7 @@ Per studiare la difficoltà dei problemi *decidibili* in termini di tempo, è ut
 ]
 
 #esempio(titolo: "Problemi in P")[
-  Ordinamento ($O(n log n)$), ricerca in array/lista/albero, ordinamento topologico di un DAG, connettività di un grafo, ricerca di un ciclo euleriano, test di primalità (Agrawal--Kayal--Saxena, 2002).
+  Ordinamento ($O(n log n)$), ricerca in array/lista/albero, ordinamento topologico di un DAG, connettività di un grafo, ricerca di un ciclo euleriano, test di primalità.
 ]
 
 #esempio(titolo: "Problemi presumibilmente intrattabili")[
@@ -545,7 +547,7 @@ Il primo problema del quale si è dimostrata la NP-completezza è SAT. Questo fo
   _SAT è NP-completo._
 ]
 
-(La dimostrazione originale codifica direttamente l'esecuzione di una macchina di Turing non deterministica polinomiale come una formula booleana in FNC; non la riportiamo per brevità.)
+(La dimostrazione, tecnica, non viene riportata in questo corso.)
 
 #proposizione(titolo: "Caratterizzazione operativa della NP-completezza")[
   _Un problema $Pi in "NP"$ è NP-completo se e solo se $"SAT" <=_p Pi$ (o, equivalentemente, $Pi^* <=_p Pi$ per un qualsiasi problema $Pi^*$ NP-completo)._
@@ -589,82 +591,19 @@ Mostriamo come la riduzione di Cook--Levin si propaga ad altri problemi.
   Una $3$-clique nel grafo è ${b_1, overline(a)_2, overline(c)_3}$, che corrisponde all'assegnazione parziale $b = 1, a = 0, c = 0$: si verifica che soddisfa $F$.
 ]
 
-=== Una seconda riduzione: $"CLIQUE" <=_p "INDEPENDENT SET"$
-
-Vediamo ora un esempio di riduzione *fra problemi su grafi*, molto più semplice della precedente: è una pura osservazione strutturale e non richiede di codificare un linguaggio in un altro.
-
-#definizione(titolo: "INDEPENDENT SET")[
-  Dato un grafo $G = (V, E)$ e un intero $k > 0$, decidere se esiste un sottoinsieme $S subset.eq V$ con $|S| >= k$ tale che *nessuna* coppia di vertici di $S$ sia collegata da un arco di $G$. Un tale $S$ si dice *insieme indipendente* (o _stable set_).
-]
-
-#esempio[
-  Nel grafo a $5$ vertici ${1, 2, 3, 4, 5}$ con archi ${(1,2), (2,3), (3,4), (4,5)}$ (un cammino), l'insieme ${1, 3, 5}$ è indipendente: non ci sono archi fra questi tre vertici. Quindi l'istanza $(G, 3)$ di INDEPENDENT SET è positiva.
-]
-
-L'idea della riduzione si basa sul *grafo complementare*.
-
-#definizione(titolo: "Grafo complementare")[
-  Dato $G = (V, E)$, il *grafo complementare* $overline(G) = (V, overline(E))$ ha gli stessi vertici ma archi opposti:
-
-  $ overline(E) = { (u, v) " " | " " u, v in V, " " u != v, " " (u, v) in.not E }. $
-
-  In altre parole, due vertici sono adiacenti in $overline(G)$ se e solo se _non_ lo sono in $G$.
-]
-
-#osservazione[
-  Costruire $overline(G)$ a partire da $G$ richiede di scorrere tutte le coppie di vertici $(u, v)$ e includere l'arco in $overline(E)$ se $(u, v) in.not E$. Costo: $O(|V|^2)$, *polinomiale* in $|V|$. Useremo questa proprietà nella riduzione.
-]
-
-#lemma(titolo: "Clique e insiemi indipendenti")[
-  _Sia $G = (V, E)$ un grafo e $S subset.eq V$. Allora $S$ è una clique in $G$ se e solo se $S$ è un insieme indipendente in $overline(G)$._
-]
-
-#dimostrazione(stile: "doppia implicazione")[
-  Per definizione:
-  - $S$ è clique in $G$ $arrow.l.r.long forall u, v in S$ con $u != v$, $(u, v) in E$.
-  - $S$ è indipendente in $overline(G)$ $arrow.l.r.long forall u, v in S$ con $u != v$, $(u, v) in.not overline(E) arrow.l.r.long (u, v) in E$.
-
-  Le due condizioni coincidono. #h(1fr)
-]
-
-Da questo lemma segue immediatamente la riduzione cercata.
-
-#teorema[ _INDEPENDENT SET è NP-completo._ ]
-
-#dimostrazione(stile: "verifica + riduzione da CLIQUE")[
-  *INDEPENDENT SET $in$ NP.* Certificato per un'istanza positiva $(G, k)$: il sottoinsieme $S$ stesso. La verifica scorre tutte le coppie di vertici di $S$ e controlla che nessun arco li colleghi: tempo $O(|S|^2) = O(|V|^2)$, polinomiale.
-
-  *Riduzione $"CLIQUE" <=_p "INDEPENDENT SET"$.* Definiamo la trasformazione $f$ come segue: data un'istanza $(G, k)$ di CLIQUE, poniamo
-
-  $ f(G, k) = (overline(G), k). $
-
-  Dunque $f$ lascia invariato il parametro $k$ e sostituisce $G$ con il suo grafo complementare.
-
-  *Costo di $f$.* Calcolare $overline(G)$ richiede $O(|V|^2)$ operazioni; copiare $k$ è $O(1)$. La riduzione è polinomiale.
-
-  *Correttezza.* Per il Lemma precedente:
-
-  $ G "ha una clique di" k "vertici" arrow.l.r.long overline(G) "ha un insieme indipendente di" k "vertici", $
-
-  cioè $(G, k)$ è positiva per CLIQUE se e solo se $f(G, k) = (overline(G), k)$ è positiva per INDEPENDENT SET.
-
-  *Conclusione.* Poiché CLIQUE è NP-completo (dimostrato sopra) e $"CLIQUE" <=_p "INDEPENDENT SET"$, INDEPENDENT SET è NP-hard. Combinato con l'appartenenza a NP, è NP-completo. #h(1fr)
-]
-
-#nota(titolo: "Una proprietà comoda delle riduzioni")[
-  Si noti la simmetria: la stessa funzione $f$ realizza anche $"INDEPENDENT SET" <=_p "CLIQUE"$, perché il complementare del complementare è il grafo di partenza ($overline(overline(G)) = G$). I due problemi sono dunque *NP-equivalenti*: hanno _esattamente_ la stessa complessità asintotica. Questa è una situazione frequente: gran parte dei problemi NP-completi che si incontrano sono mutuamente riducibili.
+#nota(titolo: "Problemi NP-equivalenti")[
+  Per la transitività delle riduzioni, da $"SAT" <=_p "CLIQUE"$ e dal fatto che SAT è NP-completo segue anche $"CLIQUE" <=_p "SAT"$: SAT e CLIQUE sono *NP-equivalenti*. Tutti i problemi NP-completi sono mutuamente equivalenti: o sono _tutti_ facili (e $P = "NP"$), o sono _tutti_ difficili.
 ]
 
 === Altri NP-completi notevoli
 
 Una volta dimostrato che CLIQUE è NP-completo, si possono dimostrare altri risultati di NP-completezza riducendosi a CLIQUE (o a SAT, o a uno qualsiasi dei nuovi NP-completi). Si è creata così una rete di migliaia di problemi NP-completi: se uno solo di essi fosse in $P$, lo sarebbero tutti.
 
-#esempio(titolo: "Alcuni NP-completi classici")[
-  - *Cammino e Ciclo Hamiltoniano* (in grafi non orientati o orientati).
-  - *Commesso Viaggiatore (TSP) versione decisionale:* dato un grafo completo pesato e un budget $k$, esiste un ciclo hamiltoniano di peso $<= k$?
-  - *Zaino (Knapsack):* dati oggetti con pesi $s_i$ e profitti $p_i$, una capacità $c$ e un budget $k$, esiste un sottoinsieme di oggetti con peso totale $<= c$ e profitto totale $>= k$?
-  - *Map Coloring (3-COLORING):* è possibile colorare i vertici di $G$ con $3$ colori in modo che vertici adiacenti abbiano colori diversi?
-  - *Vertex Cover, Independent Set, Set Cover, 3-SAT, Subset Sum, Partition, Bin Packing, $dots$*
+#esempio(titolo: "Altri famosi NP-completi")[
+  - *Cammino e Ciclo Hamiltoniano:* dato $G = (V, E)$, esiste un cammino (rispettivamente, un ciclo) semplice che attraversa _tutti_ i vertici una ed una sola volta?
+  - *Commesso Viaggiatore (TSP):* dato un grafo completo $G$ con pesi $w$ sugli archi ed un intero $k$, esiste un ciclo di peso al più $k$ che attraversa ogni vertice una ed una sola volta?
+  - *Zaino (Knapsack):* dato uno zaino di capacità $c$, $n$ oggetti di dimensioni $s_1, dots, s_n$ con profitti $p_1, dots, p_n$ ed un intero $k$, esiste un sottoinsieme degli oggetti di dimensione totale al più $c$ che garantisca profitto totale almeno $k$?
+  - *Map Coloring:* è possibile colorare i vertici di un grafo con un numero limitato di colori in modo che a due vertici adiacenti sia assegnato un colore diverso? Sui grafi non planari è un problema difficile.
 ]
 
 == La gerarchia completa e la questione di P vs NP
@@ -676,17 +615,15 @@ Riassumiamo le inclusioni note (e le poche che siamo certi essere strette):
 ]
 
 #osservazione[
-  L'unica inclusione di cui sappiamo per certo che è *stretta* nella catena qui sopra è $"EXP" subset.neq "Decidibili"$ (ne abbiamo visto un esempio: il problema dell'arresto è decidibile? no, neanche questo) --- e $P subset.neq "EXP"$, per il *teorema della gerarchia in tempo* (Hartmanis--Stearns, 1965). Quindi sappiamo che _almeno una_ delle inclusioni $P subset.eq "NP" subset.eq "PSPACE" subset.eq "EXP"$ è stretta, ma _non sappiamo quale_.
+  Sebbene si sappia che la classe dei problemi decidibili contiene strettamente la classe dei problemi indecidibili (per esempio, il problema dell'arresto sta fuori dalla prima), le inclusioni intermedie $P subset.eq "NP" subset.eq "PSPACE" subset.eq "EXP"$ sono in larga parte non ancora note essere strette. La domanda più celebre è la prima della catena.
 ]
 
 #nota(titolo: "Cosa fare quando si incontra un NP-completo")[
-  In pratica, quando ci si imbatte in un problema NP-completo (e succede _spesso_ in scheduling, logistica, biologia computazionale, finanza), si abbandona la pretesa di una soluzione _ottima_ ed _esatta_ in tempo polinomiale e si ripiega su una di queste strategie:
+  Se la soluzione ottima è troppo difficile da ottenere, una soluzione quasi ottima ottenibile facilmente potrebbe essere già abbastanza buona. In pratica si ricorre a una di queste strategie:
 
-  - *Algoritmi di approssimazione:* restituiscono una soluzione la cui qualità è entro un fattore noto dall'ottimo (es. TSP con disuguaglianza triangolare ammette un'approssimazione $3/2$).
-  - *Algoritmi probabilistici (randomizzati):* la soluzione corretta si ottiene con alta probabilità.
-  - *Euristiche e metaeuristiche:* simulated annealing, algoritmi genetici, ricerca locale. Nessuna garanzia formale, ma spesso ottimi risultati su istanze "tipiche".
-  - *Restrizione del dominio:* spesso il problema diventa polinomiale su classi ristrette di istanze (es. 2-SAT è in $P$, mentre 3-SAT è NP-completo).
-  - *Algoritmi pseudopolinomiali:* per problemi numerici come Subset Sum esistono algoritmi PD che sono polinomiali nei _valori_ ma non nella _lunghezza in bit_ degli input.
+  - *Algoritmi approssimati:* restituiscono una soluzione la cui qualità non è troppo lontana da quella ottima.
+  - *Algoritmi probabilistici:* la soluzione ottima si ottiene con alta probabilità.
+  - *Euristiche:* simulazioni statistiche mostrano la bontà del metodo in molti casi, anche senza garanzie formali.
 ]
 
 #ricorda[
@@ -728,14 +665,10 @@ Riassumiamo le inclusioni note (e le poche che siamo certi essere strette):
   L'algoritmo `Goldbach()` termina se e solo se la congettura di Goldbach è falsa. Supponiamo che un giorno si dimostri che Goldbach è vera. Cosa cambierebbe rispetto al teorema di Turing? E se invece si trovasse un controesempio?
 ]
 
-#esercizio(tipo: "Dimostrazione")[
-  Sia $Pi$ un problema decisionale e $overline(Pi)$ il suo *complemento* (stesse istanze, risposta opposta). Dimostrare che $Pi in P arrow.l.r.long overline(Pi) in P$. È vero anche che $Pi in "NP" arrow.l.r.long overline(Pi) in "NP"$? (Suggerimento: la classe dei complementi di NP si chiama coNP, e non si sa se sia uguale a NP.)
-]
-
 #esercizio(tipo: "Riduzione")[
   Riprodurre, senza guardare il testo, la riduzione $"SAT" <=_p "CLIQUE"$: definizione dei vertici, regola degli archi, dimostrazione delle due implicazioni e analisi del costo.
 ]
 
 #esercizio(tipo: "Discussione")[
-  Scegliere un problema NP-completo fra Vertex Cover, 3-Coloring, Subset Sum, e descrivere a parole proprie un'idea di riduzione da un altro problema NP-completo noto. Non è necessario essere formali: l'obiettivo è mostrare di aver capito _come_ si pensa una riduzione.
+  Spiegare a parole proprie perché, se un singolo problema NP-completo fosse risolvibile in tempo polinomiale, allora *tutti* i problemi in NP sarebbero risolvibili in tempo polinomiale.
 ]
