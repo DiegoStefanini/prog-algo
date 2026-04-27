@@ -79,7 +79,15 @@ L'*algoritmo di Dijkstra* assume che tutti i pesi siano non negativi ($omega(u,v
 
 === Inizializzazione e rilassamento
 
-Gli algoritmi per cammini minimi operano su due attributi per ogni vertice $v$: la *stima* $v.d$ (limite superiore di $delta(s,v)$) e il *predecessore* $v.pi$. Entrambi vengono inizializzati da una procedura $"INITIALIZE-SINGLE-SOURCE"$ e modificati esclusivamente dal *rilassamento* di un arco.
+Gli algoritmi per cammini minimi mantengono per ogni vertice $v$ due attributi:
+
+- la *stima* $v.d$: è il peso del miglior cammino da $s$ a $v$ *trovato finora* dall'algoritmo. È solo un numero, non un cammino: rappresenta "quanto costa, al meglio delle nostre conoscenze attuali, andare da $s$ a $v$". Parte da $+infinity$ (all'inizio non si conosce alcun cammino verso $v$, tranne $s.d = 0$) e *cala monotonamente* man mano che l'algoritmo scopre cammini migliori, fino a coincidere con la distanza vera $delta(s,v)$ al termine. Si chiama "stima" proprio perché, finché l'algoritmo non è terminato, $v.d$ è solo un'approssimazione di $delta(s,v)$; più precisamente vale sempre l'invariante
+  $ v.d >= delta(s,v) $
+  ovvero $v.d$ è un *limite superiore* per la distanza vera (mai sotto, può solo scendere verso il valore corretto).
+
+- il *predecessore* $v.pi$: il vertice che precede $v$ nel cammino di peso $v.d$ trovato finora. Serve a ricostruire il cammino effettivo (non solo il suo costo) seguendo all'indietro la catena dei $pi$ a partire da $v$.
+
+Entrambi gli attributi vengono inizializzati da $"INITIALIZE-SINGLE-SOURCE"$ e modificati esclusivamente dal *rilassamento* di un arco.
 
 #algoritmo(titolo: "INITIALIZE-SINGLE-SOURCE(G, s)")[
   ```
