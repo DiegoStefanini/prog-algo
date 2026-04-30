@@ -389,3 +389,106 @@ La DFS classifica ogni arco $(u,v)$ in base al colore di $v$ quando l'arco viene
 
   $arrow.double.l$) Se $G$ contiene un ciclo $c$, sia $v$ il primo vertice scoperto in $c$ e $(u,v)$ l'arco che lo precede. Al tempo $v.d$, tutti i vertici di $c$ sono bianchi, quindi esiste cammino bianco da $v$ a $u$. Per il Teorema del Cammino Bianco, $u$ diventa discendente di $v$, e $(u,v)$ è un arco all'indietro.
 ]
+
+== Ordinamento Topologico
+
+L'*ordinamento topologico* è una linearizzazione dei vertici di un grafo orientato aciclico (DAG) tale che, per ogni arco $(u, v)$, il vertice $u$ precede $v$ nell'ordinamento. Si tratta di una primitiva fondamentale per i problemi di *scheduling con precedenze*: gli archi rappresentano vincoli del tipo "$u$ deve essere completato prima di $v$".
+
+=== Definizione
+
+#definizione(titolo: "Grafo aciclico orientato (DAG)")[
+  Un *DAG* (_Directed Acyclic Graph_) è un grafo orientato $G = (V, E)$ privo di cicli orientati: per nessun vertice $v$ esiste un cammino orientato non banale che parta e termini in $v$.
+]
+
+#definizione(titolo: "Ordinamento topologico")[
+  Sia $G = (V, E)$ un DAG. Un *ordinamento topologico* di $G$ è una sequenza lineare $sigma = v_(i_1), v_(i_2), dots, v_(i_(|V|))$ di tutti i vertici di $V$ tale che, per ogni arco $(u, v) in E$, $u$ compare *prima* di $v$ in $sigma$.
+]
+
+#osservazione[
+  Un grafo orientato ammette un ordinamento topologico *se e solo se* è aciclico: la presenza di un ciclo $v arrow.r v_1 arrow.r dots.c arrow.r v$ rende impossibile linearizzare i suoi vertici in modo coerente con la direzione degli archi.
+]
+
+#osservazione[
+  In generale, un DAG ammette *più* ordinamenti topologici. Ad esempio, su due vertici ${a, b}$ senza archi, sia $a, b$ sia $b, a$ sono ordinamenti topologici validi.
+]
+
+#esempio(titolo: "DAG del vestirsi")[
+  Un esempio classico [CLRS: §22.4]: il grafo delle precedenze tra capi di abbigliamento. Vertici: ${$mutande, pantaloni, cintura, camicia, cravatta, giacca, calzini, scarpe, orologio$}$. Archi (precedenze): mutande $arrow.r$ pantaloni; pantaloni $arrow.r$ cintura; pantaloni $arrow.r$ scarpe; camicia $arrow.r$ cintura; camicia $arrow.r$ cravatta; cintura $arrow.r$ giacca; cravatta $arrow.r$ giacca; calzini $arrow.r$ scarpe; orologio non ha vincoli.
+
+  Un ordinamento topologico valido è: $chevron.l$calzini, mutande, pantaloni, scarpe, camicia, cintura, cravatta, giacca, orologio$chevron.r$. Anche $chevron.l$orologio, calzini, mutande, pantaloni, scarpe, camicia, cintura, cravatta, giacca$chevron.r$ è valido.
+]
+
+=== Algoritmo basato su DFS
+
+L'algoritmo sfrutta il fatto che, in una DFS di un DAG, i tempi di completamento $v.f$ inducono un ordinamento topologico se letti in *ordine decrescente*. Concretamente, ogni volta che la DFS termina la visita di un vertice (lo colora di nero), lo si inserisce in *testa* a una lista lineare; al termine, la lista contiene un ordinamento topologico.
+
+#algoritmo(titolo: "TOPOLOGICAL-SORT(G)")[
+  ```
+  TOPOLOGICAL-SORT(G) {
+      L = lista vuota;
+      DFS(G);                       // calcola u.f per ogni u
+      // Durante DFS, ogni volta che un vertice u è completato (color = N),
+      // inseriscilo in TESTA a L
+      return L;
+  }
+  ```
+]
+
+In pratica si modifica `DFS-VISIT(u)` in modo che, dopo aver impostato `u.color = N` e `u.f = time`, si esegua `inserisci-in-testa(L, u)`. La struttura di parentesi della DFS garantisce che, al termine, la lista $L$ sia un ordinamento topologico.
+
+#nota(titolo: "Perché in testa e non in coda?")[
+  Inserendo in testa, l'ultimo vertice completato (quello con $f$ massimo) finisce in *prima posizione* nella lista. Inserendo in coda si otterrebbe l'ordine inverso (decrescente per $f$ in coda corrisponde a crescente in lettura, che è l'inverso di un ordinamento topologico).
+]
+
+=== Correttezza
+
+#teorema(titolo: "Correttezza di TOPOLOGICAL-SORT [CLRS: Teo. 22.12]")[
+  Se $G$ è un DAG, l'algoritmo TOPOLOGICAL-SORT$(G)$ produce un ordinamento topologico di $G$.
+]
+
+#dimostrazione[
+  Basta dimostrare che, per ogni arco $(u, v) in E$, vale $u.f > v.f$: poiché i vertici sono inseriti in $L$ in testa al momento del completamento, $u$ — completato dopo $v$ — finisce *prima* di $v$ nella lista.
+
+  Consideriamo un arco $(u, v)$ ispezionato durante la visita DFS, mentre $u$ è grigio.
+
+  - Se $v$ è *bianco*: la DFS lo scopre come discendente di $u$. Per il Teorema delle Parentesi, $[v.d, v.f] subset [u.d, u.f]$, quindi $v.f < u.f$. ✓
+
+  - Se $v$ è *grigio*: $v$ è antenato di $u$ nella foresta DF, dunque $(u, v)$ sarebbe un arco all'indietro, e per il Lemma di aciclicità (Lemma sull'aciclicità e archi all'indietro) il grafo conterrebbe un ciclo. Contraddizione con l'ipotesi che $G$ sia un DAG.
+
+  - Se $v$ è *nero*: $v$ è già stato completato prima dell'ispezione di $(u, v)$, quindi $v.f < u.f$ (il tempo è strettamente crescente). ✓
+
+  In ogni caso ammissibile $v.f < u.f$, e l'inserimento in testa garantisce che $u$ preceda $v$ in $L$.
+]
+
+#corollario(titolo: "Caratterizzazione tramite tempi di completamento")[
+  In una DFS di un DAG, l'ordine *decrescente* dei tempi di completamento $v.f$ è un ordinamento topologico.
+]
+
+=== Complessità
+
+L'algoritmo è dominato dalla DFS, con costo $Theta(|V| + |E|)$. L'inserimento in testa di una lista concatenata è $Theta(1)$ per vertice, dunque non incide sul costo asintotico:
+
+$ T(|V|, |E|) = Theta(|V| + |E|). $
+
+=== Esempio di esecuzione
+
+#esempio(titolo: "Esecuzione su un DAG di 6 vertici")[
+  Consideriamo il DAG $G$ con $V = {a, b, c, d, e, f}$ e archi ${(a, b), (a, c), (b, d), (c, d), (c, e), (d, f), (e, f)}$.
+
+  Trace della DFS partendo da $a$, con liste di adiacenza in ordine alfabetico:
+
+  - tempo 1: scopri $a$ (grigio, $a.d = 1$).
+  - tempo 2: visita lista di $a$ ($b, c$). Scopri $b$ ($b.d = 2$, grigio).
+  - tempo 3: da $b$, scopri $d$ ($d.d = 3$, grigio).
+  - tempo 4: da $d$, scopri $f$ ($f.d = 4$, grigio).
+  - tempo 5: $f$ non ha archi uscenti; chiudi $f$ ($f.f = 5$, nero). Inserisci $f$ in testa: $L = [f]$.
+  - tempo 6: ritorno a $d$; nessun altro vicino bianco; chiudi $d$ ($d.f = 6$, nero). $L = [d, f]$.
+  - tempo 7: ritorno a $b$; nessun altro vicino bianco; chiudi $b$ ($b.f = 7$). $L = [b, d, f]$.
+  - tempo 8: ritorno ad $a$; scopri $c$ ($c.d = 8$, grigio).
+  - tempo 9: da $c$, $d$ è già nero (skip); scopri $e$ ($e.d = 9$, grigio).
+  - tempo 10: da $e$, $f$ è già nero; chiudi $e$ ($e.f = 10$). $L = [e, b, d, f]$.
+  - tempo 11: ritorno a $c$; chiudi $c$ ($c.f = 11$). $L = [c, e, b, d, f]$.
+  - tempo 12: ritorno ad $a$; chiudi $a$ ($a.f = 12$). $L = [a, c, e, b, d, f]$.
+
+  L'ordinamento topologico restituito è $chevron.l a, c, e, b, d, f chevron.r$. Verifica: ogni arco $(u, v)$ rispetta l'ordine — $(a, b)$: $a$ prima di $b$ ✓; $(a, c)$: $a$ prima di $c$ ✓; $(b, d)$: $b$ prima di $d$ ✓; $(c, d)$: $c$ prima di $d$ ✓; $(c, e)$: $c$ prima di $e$ ✓; $(d, f)$: $d$ prima di $f$ ✓; $(e, f)$: $e$ prima di $f$ ✓.
+]

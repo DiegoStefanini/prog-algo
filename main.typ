@@ -192,12 +192,13 @@ Queste dispense raccolgono gli argomenti del corso di Programmazione ed Algoritm
 #include "algoritmica/tabelle_hash.typ"
 
 // ========================================
-// CAPITOLO 9 - PROGRAMMAZIONE DINAMICA
+// CAPITOLO 9 - PROGRAMMAZIONE DINAMICA E ALGORITMI GREEDY
 // ========================================
 
-= Programmazione Dinamica
+= Programmazione Dinamica e Algoritmi Greedy
 
 #include "algoritmica/programmazione_dinamica.typ"
+#include "algoritmica/algoritmi_greedy.typ"
 
 // ========================================
 // CAPITOLO 10 - GRAFI

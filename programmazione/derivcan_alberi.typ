@@ -109,6 +109,100 @@ Quando l'albero di derivazione rappresenta un'espressione, la sua struttura dete
   + Applica l'operatore $+$: $3 + 5 = 8$.
 ]
 
+== Albero di sintassi astratta (AST)
+
+L'*albero di derivazione* (parse tree) cattura fedelmente la struttura di una derivazione, ma in fase di *analisi semantica* — quando il programma viene effettivamente interpretato o compilato — molte delle sue informazioni risultano *ridondanti*. Ad esempio, i nodi intermedi che servono solo a imporre la precedenza degli operatori (`Term`, `Factor`, ...) non hanno alcun ruolo nel calcolare il valore dell'espressione: il loro contributo è già "incorporato" nella forma dell'albero. L'*albero di sintassi astratta* (Abstract Syntax Tree, AST) è una versione *condensata* del parse tree che mantiene solo l'informazione semanticamente rilevante.
+
+#definition(title: "Albero di sintassi astratta (AST)")[
+  Data una derivazione di una stringa $w$ in una grammatica $G$, l'*albero di sintassi astratta* è un albero ordinato i cui nodi sono etichettati con i *costruttori* del linguaggio (operatori, parole chiave, costanti, identificatori) e in cui:
+  + i *nodi interni* rappresentano operatori o costrutti composti, con tanti figli quanti sono gli operandi (ad esempio, un nodo $+$ ha esattamente due figli: gli operandi sinistro e destro);
+  + le *foglie* rappresentano valori atomici (numeri, identificatori, costanti);
+  + i *non terminali ausiliari* introdotti per disambiguare la grammatica (come `Term`, `Factor`, ...) *non compaiono* come nodi.
+]
+
+#example(title: "Confronto parse tree e AST per 3 + 5 × 2")[
+  Consideriamo la grammatica disambiguata vista in precedenza:
+
+  Esp $::=$ Term $|$ Esp $+$ Term \
+  Term $::=$ Factor $|$ Term $times$ Factor \
+  Factor $::=$ Num $|$ $($ Esp $)$ \
+  Num $::=$ 0 $|$ 1 $|$ ... $|$ 9
+
+  *Parse tree* per la stringa $3 + 5 times 2$:
+
+  #align(center)[
+    #block(inset: 10pt)[
+      #set text(size: 10pt)
+      ```
+                  Esp
+                /  |  \
+              Esp  +  Term
+               |    /  |  \
+              Term Term × Factor
+               |    |       |
+              Factor Factor Num
+               |     |      |
+              Num   Num     2
+               |     |
+               3     5
+      ```
+    ]
+  ]
+
+  *AST* per la stessa stringa: tutti i non terminali ausiliari (Esp, Term, Factor, Num) sono stati eliminati, lasciando solo gli operatori e i valori:
+
+  #align(center)[
+    #block(inset: 10pt)[
+      #set text(size: 10pt)
+      ```
+                +
+               / \
+              3   ×
+                 / \
+                5   2
+      ```
+    ]
+  ]
+
+  Si noti che la *forma* dell'AST riflette ancora la precedenza degli operatori: la moltiplicazione è più in profondità dell'addizione, perché viene valutata per prima. Ma i nodi che servivano *solo a imporre questa precedenza* (Term, Factor, Num) sono spariti, sostituiti da una struttura che parla direttamente in termini di operazioni.
+]
+
+#observation[
+  Il parse tree e l'AST contengono la *stessa informazione semantica*, ma con livelli di dettaglio diversi:
+
+  - il *parse tree* è fedele alla grammatica concreta: ogni applicazione di una produzione corrisponde a un nodo. È utile durante il parsing.
+  - l'*AST* è fedele al *significato*: ogni nodo è un costruttore semantico. È la rappresentazione su cui operano le fasi successive del compilatore o dell'interprete (analisi semantica, type checking, generazione di codice, valutazione).
+]
+
+#note(title: "AST nei compilatori reali")[
+  Tutti i compilatori e gli interpreti moderni costruiscono un AST come prodotto della fase di parsing: il parser riceve una stringa di token e restituisce direttamente l'AST, saltando completamente la rappresentazione esplicita del parse tree. Sull'AST si effettuano poi il *type checking* (analisi statica), le *ottimizzazioni* e la *generazione di codice intermedio*. La semantica operazionale dei capitoli successivi (MiniMao, MAO) è di fatto definita per induzione sulla struttura dell'AST.
+]
+
+#example(title: "AST di un comando MiniMao")[
+  Consideriamo il comando MiniMao
+  ```
+  if (x > 0) { y := x + 1; } else { y := 0; }
+  ```
+  Il suo AST ha la forma:
+
+  #align(center)[
+    #block(inset: 10pt)[
+      #set text(size: 10pt)
+      ```
+                    if
+                  /  |  \
+                 >  ass  ass
+                / \  /\   /\
+               x  0 y  + y  0
+                     /\
+                    x  1
+      ```
+    ]
+  ]
+
+  dove `ass` denota l'operatore di assegnamento. Anche in questo caso, costrutti sintattici come le parentesi graffe e il punto e virgola — necessari nella grammatica concreta per delimitare i blocchi — sono assenti dall'AST: la struttura ad albero ne implica già il ruolo strutturale.
+]
+
 == Ambiguità
 
 #definition(title: "Grammatica ambigua")[

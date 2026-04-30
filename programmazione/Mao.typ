@@ -713,7 +713,7 @@ Molti linguaggi moderni adottano approcci diversi:
 
 == Estensioni del linguaggio
 
-=== Tipi base aggiuntivi: char e stringhe
+=== Tipi base aggiuntivi: char, double e stringhe
 
 ==== Caratteri
 
@@ -725,6 +725,35 @@ Il tipo `char` rappresenta singoli simboli, lettere e altri caratteri alfanumeri
   char a_capo = '\n';
   ```
   Il valore `'\n'` è la sequenza di escape che rappresenta il carattere di ritorno a capo (_newline_).
+]
+
+==== Tipo double
+
+Il tipo `double` rappresenta i numeri in *virgola mobile* a doppia precisione (formato IEEE 754 a 64 bit). A differenza del tipo `int`, che modella un sottoinsieme dei numeri interi $bb(Z)$, il tipo `double` modella un sottoinsieme finito dei numeri reali $bb(R)$, sufficiente per la maggior parte dei calcoli scientifici e ingegneristici.
+
+#example(title: "Dichiarazione di valori double")[
+  ```
+  double pi = 3.14159;
+  double e = 2.71828;
+  double zero_finito = 1e-300;
+  ```
+  Le costanti letterali `double` si scrivono con la virgola decimale (in MAO si usa il punto, come in molti linguaggi di programmazione) o in notazione esponenziale.
+]
+
+L'aritmetica su `double` segue le stesse regole di MiniMao per gli operatori $+, -, *, slash$, ma le costanti e i risultati intermedi sono valori in virgola mobile. La regola di tipo si applica analogamente:
+
+#align(center)[
+  #box(stroke: (bottom: 1pt), inset: 3pt)[$Gamma tack E_1 : "double"$ #h(0.3cm) $Gamma tack E_2 : "double"$] \
+  $Gamma tack E_1 op E_2 : "double"$ #h(0.5cm) (T-DoubleOp)
+]
+per $op in \{+, -, *, slash\}$.
+
+#attenzione[
+  L'aritmetica `double` *non è esatta*: errori di arrotondamento si accumulano nei calcoli. Ad esempio, in IEEE 754 si ha $0.1 + 0.2 eq.not 0.3$ in confronto bit-per-bit. Le regole di tipo non catturano questi aspetti numerici, che sono di pertinenza della *semantica numerica* del calcolatore.
+]
+
+#note[
+  In MAO non esiste conversione implicita tra `int` e `double`: una somma del tipo `int + double` non è ben tipata e richiede una conversione esplicita (cast). Questa scelta evita gli errori sottili tipici dei linguaggi che ammettono coercizioni implicite.
 ]
 
 ==== Stringhe
@@ -996,6 +1025,12 @@ La dichiarazione di una funzione non esegue il corpo, ma memorizza nell'ambiente
 
 #note(title: "Chiusura (closure)")[
   La chiusura cattura l'ambiente $rho$ al momento della dichiarazione. Questo è essenziale per lo *scoping statico* (o _lessicale_): quando la funzione verrà invocata, le variabili libere nel corpo saranno risolte nell'ambiente della dichiarazione, non in quello della chiamata. Senza la chiusura, una funzione definita in un certo contesto e chiamata in un altro potrebbe accedere a variabili diverse da quelle previste dal programmatore.
+]
+
+#note(title: "Dichiarazione come lambda astrazione")[
+  Dal punto di vista del *lambda calcolo*, la dichiarazione di una funzione corrisponde a una *lambda astrazione*: l'espressione $lambda "Id"_1, dots, "Id"_n. C$ rappresenta una funzione anonima che, applicata a $n$ argomenti, esegue il corpo $C$ con i parametri formali legati ai valori passati. La regola (Decl-Fun) si può dunque leggere così: "associa al nome `Id` la lambda astrazione $lambda "Id"_1, dots, "Id"_n. C$, *catturando* l'ambiente $rho$ in cui la dichiarazione avviene".
+
+  Questa lettura sottolinea che il nome `Id` è solo un'etichetta apposta a una funzione che, di per sé, è un valore — la chiusura $("Id"_1, dots, "Id"_n, C, rho)$. In linguaggi che ammettono *funzioni anonime* (come JavaScript con `function(x) { ... }` o Python con `lambda x: ...`), il valore lambda può essere passato come argomento, restituito da altre funzioni o assegnato a variabili senza necessariamente avere un nome dichiarato.
 ]
 
 ==== Chiamata di funzione

@@ -729,6 +729,192 @@ $T(n) = O(n)$.
   $A' = {1, 4}$, somma $= 5$. $checkmark$
 ]
 
+== Il problema dello Zaino 0-1
+
+Un escursionista deve riempire uno zaino con un sottoinsieme di oggetti, ciascuno caratterizzato da un peso e da un valore; lo zaino ha una capacità massima oltre la quale non può essere caricato. L'obiettivo è scegliere quali oggetti portare in modo da *massimizzare il valore totale* trasportato, rispettando il vincolo di peso. La variante *0-1* impone che ogni oggetto sia preso intero o lasciato: non sono ammesse frazioni. Si tratta di un problema classico di ottimizzazione combinatoria, paradigmatico per la programmazione dinamica.
+
+=== Definizione del problema
+
+#definizione(titolo: "Zaino 0-1 (Knapsack 0-1)")[
+  Dati $n$ oggetti, ciascuno con peso intero positivo $p_i$ e valore intero positivo $v_i$ ($i = 1, dots, n$), e una *capacità* $W$ intera positiva, trovare un sottoinsieme $S subset.eq {1, dots, n}$ che *massimizzi* il valore totale
+  $ sum_(i in S) v_i $
+  rispettando il vincolo di peso
+  $ sum_(i in S) p_i <= W. $
+  Il nome *0-1* indica che ogni oggetto può essere preso intero ($x_i = 1$) o non preso ($x_i = 0$): non sono ammesse frazioni.
+]
+
+#esempio(titolo: "Istanza piccola")[
+  Quattro oggetti con pesi $p = (2, 3, 4, 5)$ e valori $v = (3, 4, 5, 6)$. Capacità $W = 5$.
+
+  Soluzioni candidate:
+  - $S = {1, 2}$: peso $2+3 = 5$, valore $3+4 = 7$.
+  - $S = {1, 3}$: peso $2+4 = 6 > 5$, *non ammissibile*.
+  - $S = {4}$: peso $5$, valore $6$.
+  - $S = {2, 3}$: peso $3+4 = 7 > 5$, *non ammissibile*.
+
+  Il valore massimo è $7$, ottenuto con $S = {1, 2}$.
+]
+
+La forza bruta enumera tutti i $2^n$ sottoinsiemi: $T(n) = O(n dot 2^n)$, intrattabile per $n$ grande.
+
+=== Sottostruttura ottima
+
+#nota(titolo: "Intuizione: prendere o non prendere")[
+  Per ciascuno degli $n$ oggetti abbiamo esattamente *due scelte*: prendere l'oggetto oppure lasciarlo. Concentriamoci sull'ultimo oggetto $n$:
+
+  - *Non prendo l'oggetto $n$*: il problema si riduce a riempire uno zaino di capacità $W$ usando solo i primi $n-1$ oggetti.
+  - *Prendo l'oggetto $n$*: aggiungo $v_n$ al valore totale, ma devo riempire la capacità rimanente $W - p_n$ usando solo i primi $n-1$ oggetti. Questa opzione è disponibile solo se $p_n <= W$.
+
+  La soluzione ottima è la migliore delle due. Da qui nasce la sottostruttura ricorsiva.
+]
+
+#teorema(titolo: "Sottostruttura ottima dello Zaino 0-1")[
+  Sia $K(i, w)$ il valore massimo ottenibile riempiendo uno zaino di capacità $w$ con un sottoinsieme dei primi $i$ oggetti. Allora:
+
+  - se $i = 0$ oppure $w = 0$, $K(i, w) = 0$;
+  - se $p_i > w$, $K(i, w) = K(i-1, w)$;
+  - se $p_i <= w$, $K(i, w) = max{K(i-1, w), space v_i + K(i-1, w - p_i)}$.
+]
+
+#dimostrazione[
+  Sia $S^*$ una soluzione ottima per il problema con primi $i$ oggetti e capacità $w$.
+
+  *Caso 1*: $i in.not S^*$. Allora $S^*$ è un sottoinsieme di ${1, dots, i-1}$ con peso totale $<= w$, e il suo valore è ottimo per $K(i-1, w)$ (altrimenti sostituendo otterremmo una soluzione migliore di $S^*$, contraddizione). Quindi $K(i, w) = K(i-1, w)$.
+
+  *Caso 2*: $i in S^*$. Allora $S^* backslash {i}$ è un sottoinsieme di ${1, dots, i-1}$ con peso totale $<= w - p_i$ e valore $K(i, w) - v_i$. Per ottimalità di $S^*$, $S^* backslash {i}$ è ottimo per $K(i-1, w - p_i)$, dunque $K(i, w) = v_i + K(i-1, w - p_i)$.
+
+  Il massimo dei due casi dà il risultato.
+]
+
+=== Formula ricorsiva e algoritmo PD
+
+Dalla sottostruttura ottima si ricava direttamente la formula ricorsiva per il riempimento della tabella $K$ di dimensione $(n+1) times (W+1)$:
+
+$ K[i,w] = cases(
+  0 & "se" i = 0 "o" w = 0,
+  K[i-1, w] & "se" p_i > w,
+  max(K[i-1\, w]\, space v_i + K[i-1\, w - p_i]) & "se" p_i <= w
+) $
+
+#nota(titolo: "Leggere la formula")[
+  - *Caso base*: senza oggetti o senza capacità, il valore massimo è $0$.
+  - *$p_i > w$*: l'oggetto $i$ non entra nello zaino, lo escludo: il problema si riduce ai primi $i-1$ oggetti con la stessa capacità.
+  - *$p_i <= w$*: confronto le due alternative — escludo $i$ (a sinistra) oppure lo includo guadagnando $v_i$ ma riducendo la capacità (a destra).
+]
+
+#algoritmo(titolo: "Knapsack-01(p, v, n, W)")[
+  ```
+  Knapsack-01(p, v, n, W) {
+      // p: array dei pesi, v: array dei valori, n: numero oggetti, W: capacità
+      K = nuova matrice (n+1) × (W+1);
+      for (w = 0; w <= W; w++) { K[0, w] = 0; }
+      for (i = 0; i <= n; i++) { K[i, 0] = 0; }
+      for (i = 1; i <= n; i++) {
+          for (w = 1; w <= W; w++) {
+              if (p[i] > w) {
+                  K[i, w] = K[i-1, w];
+              } else {
+                  K[i, w] = K[i-1, w];
+                  if (v[i] + K[i-1, w - p[i]] > K[i, w]) {
+                      K[i, w] = v[i] + K[i-1, w - p[i]];
+                  }
+              }
+          }
+      }
+      return K;
+  }
+  ```
+]
+
+*Complessità*: due cicli annidati riempiono $n dot W$ celle in tempo $Theta(1)$ ciascuna, quindi $T(n, W) = Theta(n dot W)$. Lo spazio è $S(n, W) = Theta(n dot W)$.
+
+#osservazione[
+  L'algoritmo è *pseudo-polinomiale*: il tempo è polinomiale nel *valore* di $W$, ma esponenziale nella *dimensione* della rappresentazione binaria di $W$ (che richiede $Theta(log W)$ bit). Per $W$ molto grande l'algoritmo diventa impraticabile.
+]
+
+=== Esempio passo-passo
+
+#esempio(titolo: "Riempimento della tabella per n = 4, W = 5")[
+  Istanza: $p = (2, 3, 4, 5)$, $v = (3, 4, 5, 6)$, $W = 5$.
+
+  *Riga $i = 0$*: tutti zero.
+
+  *Riga $i = 1$* ($p_1 = 2$, $v_1 = 3$): per ogni $w$, confronto $K[0, w]$ con $v_1 + K[0, w - p_1]$:
+  - $w = 1$: $p_1 = 2 > 1$, $K[1,1] = K[0,1] = 0$.
+  - $w = 2$: $p_1 = 2 <= 2$, $K[1,2] = max(0, 3 + K[0,0]) = max(0, 3) = 3$.
+  - $w = 3, 4, 5$: $p_1 <= w$, $K[1,w] = max(0, 3 + 0) = 3$.
+
+  *Riga $i = 2$* ($p_2 = 3$, $v_2 = 4$):
+  - $w = 1, 2$: $p_2 = 3 > w$, $K[2, w] = K[1, w]$ (cioè $0, 3$).
+  - $w = 3$: $K[2,3] = max(K[1,3], 4 + K[1,0]) = max(3, 4) = 4$.
+  - $w = 4$: $K[2,4] = max(K[1,4], 4 + K[1,1]) = max(3, 4 + 0) = 4$.
+  - $w = 5$: $K[2,5] = max(K[1,5], 4 + K[1,2]) = max(3, 4 + 3) = 7$.
+
+  *Riga $i = 3$* ($p_3 = 4$, $v_3 = 5$):
+  - $w = 1, 2, 3$: $p_3 = 4 > w$, $K[3,w] = K[2,w]$.
+  - $w = 4$: $K[3,4] = max(K[2,4], 5 + K[2,0]) = max(4, 5) = 5$.
+  - $w = 5$: $K[3,5] = max(K[2,5], 5 + K[2,1]) = max(7, 5+0) = 7$.
+
+  *Riga $i = 4$* ($p_4 = 5$, $v_4 = 6$):
+  - $w = 1, ..., 4$: $p_4 = 5 > w$, $K[4,w] = K[3,w]$.
+  - $w = 5$: $K[4,5] = max(K[3,5], 6 + K[3,0]) = max(7, 6) = 7$.
+
+  *Tabella completa*:
+
+  #table(
+    columns: 7,
+    align: center,
+    stroke: 0.5pt,
+    [], [$w=0$], [1], [2], [3], [4], [5],
+    [$i=0$], [0], [0], [0], [0], [0], [0],
+    [1 ($p=2,v=3$)], [0], [0], [3], [3], [3], [3],
+    [2 ($p=3,v=4$)], [0], [0], [3], [4], [4], [7],
+    [3 ($p=4,v=5$)], [0], [0], [3], [4], [5], [7],
+    [4 ($p=5,v=6$)], [0], [0], [3], [4], [5], [7],
+  )
+
+  Il valore massimo è $K[4,5] = 7$.
+]
+
+=== Ricostruzione della soluzione
+
+Per ottenere il sottoinsieme $S^*$ (non solo il valore massimo) si percorre la tabella all'indietro a partire da $K[n, W]$.
+
+#nota(titolo: "Regola di ricostruzione")[
+  Confrontando $K[i, w]$ con $K[i-1, w]$:
+  - se $K[i, w] = K[i-1, w]$, l'oggetto $i$ *non* è stato preso: continua con $(i-1, w)$;
+  - altrimenti l'oggetto $i$ *è stato preso*: aggiungilo a $S^*$ e continua con $(i-1, w - p_i)$.
+]
+
+#algoritmo(titolo: "Print-Knapsack(K, p, n, W)")[
+  ```
+  Print-Knapsack(K, p, n, W) {
+      i = n;
+      w = W;
+      while (i > 0 && w > 0) {
+          if (K[i, w] != K[i-1, w]) {
+              print i;          // l'oggetto i è in S*
+              w = w - p[i];
+          }
+          i = i - 1;
+      }
+  }
+  ```
+]
+
+$T(n) = O(n)$: ogni iterazione decrementa $i$.
+
+#esempio(titolo: "Ricostruzione per l'istanza precedente")[
+  Partiamo da $K[4, 5] = 7$:
+  - $i = 4, w = 5$: $K[4,5] = 7 = K[3,5]$ → oggetto 4 *non preso*. $i := 3$.
+  - $i = 3, w = 5$: $K[3,5] = 7 = K[2,5]$ → oggetto 3 *non preso*. $i := 2$.
+  - $i = 2, w = 5$: $K[2,5] = 7 eq.not K[1,5] = 3$ → oggetto 2 *preso*. $w := 5 - 3 = 2$. $i := 1$.
+  - $i = 1, w = 2$: $K[1,2] = 3 eq.not K[0,2] = 0$ → oggetto 1 *preso*. $w := 2 - 2 = 0$. $i := 0$.
+  - $w = 0$: fine.
+
+  $S^* = {1, 2}$, peso totale $2 + 3 = 5$, valore totale $3 + 4 = 7$. $checkmark$
+]
+
 == Riepilogo
 
 #ricorda[
@@ -742,6 +928,7 @@ $T(n) = O(n)$.
     [Fibonacci], [$O(phi^n)$], [$Theta(n)$], [Array 1D, $n+1$],
     [Taglio Corde], [$O(2^n)$], [$Theta(n^2)$], [Array 1D, $n+1$],
     [LCS], [$O(n dot 2^m)$], [$Theta(m dot n)$], [Matrice $(m+1) times (n+1)$],
+    [Zaino 0-1], [$O(n dot 2^n)$], [$Theta(n dot W)$#super[$ast$]], [Matrice $(n+1) times (W+1)$],
     [Partizione], [$O(n dot 2^n)$], [$Theta(n dot s)$#super[$ast$]], [Matrice $(n+1) times (s+1)$],
   )
 
